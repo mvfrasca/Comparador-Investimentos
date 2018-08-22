@@ -23,35 +23,35 @@ import sqlite3
 # called `app` in `main.py`.
 app = Flask(__name__)
 
-ipca = {
-        '01/2016': 1.27,
-        '02/2016': 0.9,
-        '03/2016': 0.43,
-        '04/2016': 0.61,
-        '05/2016': 0.78,
-        '06/2016': 0.35,
-        '07/2016': 0.52,
-        '08/2016': 0.44,
-        '09/2016': 0.08,
-        '10/2016': 0.26,
-        '11/2016': 0.18,
-        '12/2016': 0.3,
-        '01/2017': 0.38,
-        '02/2017': 0.33,
-        '03/2017': 0.25,
-        '04/2017': 0.14,
-        '05/2017': 0.31,
-        '06/2017': -0.23,
-        '07/2017': 0.24,
-        '08/2017': 0.19,
-        '09/2017': 0.16,
-        '10/2017': 0.42,
-        '11/2017': 0.28,
-        '12/2017': 0.44,
-        '01/2018': 0.29,
-        '02/2018': 0.32,
-        '03/2018': 0.09,
-        '04/2018': 0.22
+ipca = {     
+        '2016-01': 1.27,
+        '2016-02': 0.9,
+        '2016-03': 0.43,
+        '2016-04': 0.61,
+        '2016-05': 0.78,
+        '2016-06': 0.35,
+        '2016-07': 0.52,
+        '2016-08': 0.44,
+        '2016-09': 0.08,
+        '2016-10': 0.26,
+        '2016-11': 0.18,
+        '2016-12': 0.3,
+        '2017-01': 0.38,
+        '2017-02': 0.33,
+        '2017-03': 0.25,
+        '2017-04': 0.14,
+        '2017-05': 0.31,
+        '2017-06': -0.23,
+        '2017-07': 0.24,
+        '2017-08': 0.19,
+        '2017-09': 0.16,
+        '2017-10': 0.42,
+        '2017-11': 0.28,
+        '2017-12': 0.44,
+        '2018-01': 0.29,
+        '2018-02': 0.32,
+        '2018-03': 0.09,
+        '2018-04': 0.22
     }
 
 def dict_factory(cursor, row):
@@ -91,15 +91,20 @@ def calcular_investimento():
         return "Valor do investimento inválido. Informe um valor numérico (utilize . (ponto) para separação de decimais)" 
 
     # Define a variável do dicionário que armazenará a evolução do valor investido mês a mês
+    resultado_investimento = {}
     evolucao = {}
+    i = 0
     # Varre o dicionário de índices para aplicar os índices mês a mês 
-    for mes_ano, val_indice in ipca.items():
+    for ano_mes, val_indice in ipca.items():
         val_indice = Decimal(val_indice) / Decimal(100)
         val_investimento = val_investimento + (val_investimento * val_indice)
-        evolucao[mes_ano] = {'Indice': str(val_indice), 'Valor': str(val_investimento)}
-        print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(mes_ano, val_indice, val_investimento))
-    
-    return jsonify(evolucao=evolucao)
+        evolucao[i] = {'Ano/mês': str(ano_mes), 'Indice': str(val_indice), 'Valor': str(val_investimento)}
+        i = i + 1
+        print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento))
+        
+    resultado_investimento.update({'evolucao': evolucao})
+
+    return jsonify(resultado_investimento=resultado_investimento)
 
 # @app.route('/api/v1/resources/percursos/all', methods=['GET'])
 # def api_all():
