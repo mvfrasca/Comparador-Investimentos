@@ -15,6 +15,8 @@
 # [START gae_python37_app]
 from flask import Flask, jsonify, request
 from decimal import *
+# Imports the Google Cloud client library
+from google.cloud import datastore
 import os
 import sqlite3
 
@@ -70,12 +72,12 @@ def calcular_investimento():
     # Obtém argumentos
     query_parameters = request.args
     # Resgata o valor do investimento
-    val_investimento = query_parameters.get('val_investimento')
-    
-    print(query_parameters.get('val_investimento'))
+    val_investimento_inicial = query_parameters.get('val_investimento')
+
+    #print(query_parameters.get('val_investimento'))
 
     # Valida se parâmetro do valor do investimento foi informado
-    if not (val_investimento):
+    if not (val_investimento_inicial):
         return page_not_found(404)
     # Valida se parâmetro do valor do investimento é numérico  
     # if not str.isdecimal(val_investimento):
@@ -86,25 +88,63 @@ def calcular_investimento():
 
     # Testando a conversão para decimal já que o isnumeric e isdecimal não funcionou corretamente
     try:
-        val_investimento = Decimal(val_investimento)
+        val_investimento_inicial = Decimal(val_investimento_inicial)
     except InvalidOperation:
         return "Valor do investimento inválido. Informe um valor numérico (utilize . (ponto) para separação de decimais)" 
 
+    # Inicializa o valor de investimento atualizado onde serão aplicados índices por período
+    val_investimento_atualizado = val_investimento_inicial
+
+    # Instancia o cliente do banco de dados NOSQL GCloud DataStore
+    datastore_client = datastore.Client()
+    # Prepara a query para consultar valores do índice IPCA
+    query = datastore_client.query(kind='IPCA')
+    #Define ordenação da consulta
+    query.order = ['ano_mes']
+    # Executa a consulta e armazena num dictionary 
+    indices = list(query.fetch())
+    #print(indices)
+    
     # Define a variável do dicionário que armazenará a evolução do valor investido mês a mês
     resultado_investimento = {}
     evolucao = {}
     i = 0
     # Varre o dicionário de índices para aplicar os índices mês a mês 
-    for ano_mes, val_indice in ipca.items():
+    for indice in indices:
+        ano_mes = indice['ano_mes']
+        val_indice = indice['val_indice']
         val_indice = Decimal(val_indice) / Decimal(100)
-        val_investimento = val_investimento + (val_investimento * val_indice)
-        evolucao[i] = {'Ano/mês': str(ano_mes), 'Indice': str(val_indice), 'Valor': str(val_investimento)}
+        val_investimento_atualizado = val_investimento_atualizado + (val_investimento_atualizado * val_indice)
+        evolucao[i] = {'Ano/mês': str(ano_mes), 'Indice': str(val_indice), 'Valor': str(val_investimento_atualizado)}
         i = i + 1
-        print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento))
-        
-    resultado_investimento.update({'evolucao': evolucao})
+        #print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento_atualizado))
+
+    rendimento_bruto = val_investimento_atualizado - val_investimento_inicial
+    resultado_investimento.update({'val_investimento_inicial': str(val_investimento_inicial)})
+    resultado_investimento.update({'val_investimento_atualizado': str(val_investimento_atualizado)})
+    resultado_investimento.update({'rendimento_bruto': str(rendimento_bruto)})
+    resultado_investimento.update({'evolucao': evolucao})    
 
     return jsonify(resultado_investimento=resultado_investimento)
+
+@app.route('/api/v1/resources/popular_indice', methods=['GET'])
+def popular_indice():
+    # Instancia o cliente do banco de dados NOSQL GCloud DataStore
+    datastore_client = datastore.Client()
+    # Varre o dicionário de índices para aplicar os índices mês a mês 
+    for ano_mes, val_indice in ipca.items():
+        # Obtém uma chave para inclusão do novo índice
+        chave_indice = datastore_client.key('IPCA')
+        # Prepara a nova entidade instanciando-a 
+        indice = datastore.Entity(key=chave_indice)
+        # Define o valor da(s) propriedade(s) da entidade
+        indice['ano_mes'] = ano_mes
+        indice['val_indice'] = val_indice
+        # Insere o novo índice
+        datastore_client.put(indice)
+
+    return "Indice populado com sucesso!"
+
 
 # @app.route('/api/v1/resources/percursos/all', methods=['GET'])
 # def api_all():
