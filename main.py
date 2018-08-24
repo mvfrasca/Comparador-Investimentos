@@ -107,7 +107,7 @@ def calcular_investimento():
     
     # Define a variável do dicionário que armazenará a evolução do valor investido mês a mês
     resultado_investimento = {}
-    evolucao = {}
+    evolucao = []
     i = 0
     # Varre o dicionário de índices para aplicar os índices mês a mês 
     for indice in indices:
@@ -115,7 +115,7 @@ def calcular_investimento():
         val_indice = indice['val_indice']
         val_indice = Decimal(val_indice) / Decimal(100)
         val_investimento_atualizado = val_investimento_atualizado + (val_investimento_atualizado * val_indice)
-        evolucao[i] = {'Ano/mês': str(ano_mes), 'Indice': str(val_indice), 'Valor': str(val_investimento_atualizado)}
+        evolucao.append({'ano_mes': str(ano_mes), 'indice': str(val_indice), 'valor': str(val_investimento_atualizado)})
         i = i + 1
         #print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento_atualizado))
 
@@ -125,7 +125,7 @@ def calcular_investimento():
     resultado_investimento.update({'rendimento_bruto': str(rendimento_bruto)})
     resultado_investimento.update({'evolucao': evolucao})    
 
-    return jsonify(resultado_investimento=resultado_investimento)
+    return jsonify(resultado_investimento)
 
 @app.route('/api/v1/resources/popular_indice', methods=['GET'])
 def popular_indice():
