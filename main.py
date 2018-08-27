@@ -148,6 +148,8 @@ def popular_indice():
         # Insere o novo índice
         datastore_client.put(indice)
 
+        #hfjsdhfjde
+        
         # Padrão de consulta da API
         # http://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_serie}/dados?formato=json&dataInicial={dataInicial}&dataFinal={dataFinal}
 
