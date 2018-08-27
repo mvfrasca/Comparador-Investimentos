@@ -20,6 +20,11 @@ from google.cloud import datastore
 import os
 import sqlite3
 
+# import bookshelf
+# import config
+
+
+#app = bookshelf.create_app(config)
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
