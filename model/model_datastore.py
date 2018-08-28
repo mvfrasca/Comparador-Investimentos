@@ -12,20 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Importanto web framework Flask
 from flask import current_app
+# Importa o cliente Google Cloud Datasotore
 from google.cloud import datastore
 
-
-builtin_list = list
+# builtin_list = list
 
 
 def init_app(app):
     pass
 
-
 def get_client():
     return datastore.Client(current_app.config['PROJECT_ID'])
 
+def get_indices():
+    # Instancia o cliente do banco de dados NOSQL GCloud DataStore
+    datastore_client = datastore.Client()
+    # Prepara a query para consultar valores do índice IPCA
+    query = datastore_client.query(kind='IPCA')
+    #Define ordenação da consulta
+    query.order = ['ano_mes']
+    # Executa a consulta e armazena num dictionary 
+    indices = list(query.fetch())
+    
+    return indices
 
 # [START from_datastore]
 def from_datastore(entity):
@@ -49,20 +60,20 @@ def from_datastore(entity):
 
 
 # [START list]
-def list(limit=10, cursor=None):
-    ds = get_client()
+# def list(limit=10, cursor=None):
+#     ds = get_client()
 
-    query = ds.query(kind='Book', order=['title'])
-    query_iterator = query.fetch(limit=limit, start_cursor=cursor)
-    page = next(query_iterator.pages)
+#     query = ds.query(kind='Book', order=['title'])
+#     query_iterator = query.fetch(limit=limit, start_cursor=cursor)
+#     page = next(query_iterator.pages)
 
-    entities = builtin_list(map(from_datastore, page))
-    next_cursor = (
-        query_iterator.next_page_token.decode('utf-8')
-        if query_iterator.next_page_token else None)
+#     entities = builtin_list(map(from_datastore, page))
+#     next_cursor = (
+#         query_iterator.next_page_token.decode('utf-8')
+#         if query_iterator.next_page_token else None)
 
-    return entities, next_cursor
-# [END list]
+#     return entities, next_cursor
+# # [END list]
 
 
 def read(id):
