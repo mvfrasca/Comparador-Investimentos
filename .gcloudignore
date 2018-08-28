@@ -13,5 +13,9 @@
 .git
 .gitignore
 
+# VS Code configurations
+.vscode/
+
 # Python pycache:
 __pycache__/
+
