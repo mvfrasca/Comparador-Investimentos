@@ -152,9 +152,9 @@ def calcular_investimento():
 @api.route('/indice', methods=['GET'])
 def popular_indice():
     
-    recuperar_indices('433','01/06/2018','28/08/2018')
+    return recuperar_indices('433','01/06/2018','28/08/2018')
     
-    return "Indice populado com sucesso!", 200
+    #return "Indice populado com sucesso!", 200
 
 def recuperar_indices(codigoIndice, dataInicial, dataFinal):
     # Padrão de consulta da API
@@ -179,6 +179,8 @@ def recuperar_indices(codigoIndice, dataInicial, dataFinal):
     response = requests.get(urlAPI)
     if response.status_code == 200:
         print(response.content)
+    
+    return response.content
         # Varre o dicionário de índices para aplicar os índices mês a mês 
         # for ano_mes, val_indice in ipca.items():
         #     # Obtém uma chave para inclusão do novo índice
