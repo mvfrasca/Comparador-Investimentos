@@ -17,14 +17,15 @@ from flask import current_app
 # Importa o cliente Google Cloud Datasotore
 from google.cloud import datastore
 
-# builtin_list = list
+builtin_list = list
 
 
 def init_app(app):
     pass
 
 def get_client():
-    return datastore.Client(current_app.config['PROJECT_ID'])
+    # return datastore.Client(current_app.config['PROJECT_ID'])
+    return datastore.Client()
 
 def get_indices():
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
@@ -37,6 +38,18 @@ def get_indices():
     indices = list(query.fetch())
     
     return indices
+
+
+# def insert_indices():
+#      # Obtém uma chave para inclusão do novo índice
+#     chave_indice = datastore_client.key('Indices')
+#     # Prepara a nova entidade instanciando-a 
+#     indice = datastore.Entity(key=chave_indice)
+#     # Define o valor da(s) propriedade(s) da entidade
+#     indice['dt_referencia'] = ano_mes
+#     indice['val_indice'] = val_indice
+#     # Insere o novo índice
+#     datastore_client.put(indice)
 
 # [START from_datastore]
 def from_datastore(entity):
@@ -78,7 +91,7 @@ def from_datastore(entity):
 
 def read(id):
     ds = get_client()
-    key = ds.key('Book', int(id))
+    key = ds.key('Indices', int(id))
     results = ds.get(key)
     return from_datastore(results)
 
@@ -87,17 +100,21 @@ def read(id):
 def update(data, id=None):
     ds = get_client()
     if id:
-        key = ds.key('Book', int(id))
+        key = ds.key('Indices', int(id))
     else:
-        key = ds.key('Book')
+        key = ds.key('Indices')
 
-    entity = datastore.Entity(
-        key=key,
-        exclude_from_indexes=['description'])
+    # entity = datastore.Entity(
+    #     key=key) ,
+    #     exclude_from_indexes=['description'])
+        
+    entity = datastore.Entity(key=key)
 
     entity.update(data)
     ds.put(entity)
-    return from_datastore(entity)
+    
+    #return from_datastore(entity)
+    return key
 
 
 create = update
@@ -106,5 +123,5 @@ create = update
 
 def delete(id):
     ds = get_client()
-    key = ds.key('Book', int(id))
+    key = ds.key('Indices', int(id))
     ds.delete(key)

@@ -14,8 +14,10 @@
 
 from model import get_model
 from flask import Blueprint, redirect, render_template, request, url_for, jsonify
-# Importanto classe para tratamento de números decimais
+# Importanto módulo para tratamento de números decimais
 from decimal import *
+# Importa módulo para tratamento de data/hora
+from datetime import datetime
 # Importando classes para tratamento de Json e requests HTTP
 import json, requests
 
@@ -82,7 +84,7 @@ def calcular_investimento():
     # Obtém argumentos
     query_parameters = request.args
     # Resgata o valor do investimento
-    val_investimento_inicial = query_parameters.get('val_investimento')
+    val_investimento_inicial = query_parameters.get('valor')
 
     #print(query_parameters.get('val_investimento'))
 
@@ -151,9 +153,30 @@ def calcular_investimento():
 
 @api.route('/indice', methods=['GET'])
 def popular_indice():
+
+    # Obtém indicadores
+    indicador = "CDI"
     
-    return recuperar_indices('433','01/06/2018','28/08/2018')
+    # Recupera indices da API
+    indices = recuperar_indices('433','01/06/2018','28/08/2018') #.to_dict(flat=True)
     
+    for x in indices:
+        print("Indice")
+        print(x)
+                   
+        dt_referencia = datetime.strptime(x['data'], "%d/%m/%Y")
+        val_indice = float(x['valor'])
+
+        indice = {}
+        indice.update({'tp_indice': indicador })
+        indice.update({'dt_referencia': dt_referencia})
+        indice.update({'val_indice': val_indice})
+        
+        print("Indice: {0}".format(indice))
+
+        key = get_model().create(indice)
+        print(key)
+
     #return "Indice populado com sucesso!", 200
 
 def recuperar_indices(codigoIndice, dataInicial, dataFinal):
@@ -178,9 +201,10 @@ def recuperar_indices(codigoIndice, dataInicial, dataFinal):
 
     response = requests.get(urlAPI)
     if response.status_code == 200:
-        print(response.content)
-    
-    return response.content
+        print("Retorno da API: ")
+        print(response.json()) 
+
+    return response.json()
         # Varre o dicionário de índices para aplicar os índices mês a mês 
         # for ano_mes, val_indice in ipca.items():
         #     # Obtém uma chave para inclusão do novo índice
