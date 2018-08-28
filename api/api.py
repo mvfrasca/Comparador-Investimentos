@@ -16,6 +16,8 @@ from model import get_model
 from flask import Blueprint, redirect, render_template, request, url_for, jsonify
 # Importanto classe para tratamento de números decimais
 from decimal import *
+# Importando classes para tratamento de Json e requests HTTP
+import json, requests
 
 # Criando blueprint do módulo da API
 api = Blueprint('api', __name__)
@@ -144,26 +146,47 @@ def calcular_investimento():
 #         indice['val_indice'] = val_indice
 #         # Insere o novo índice
 #         datastore_client.put(indice)
-        
-#         # Padrão de consulta da API
-#         # http://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_serie}/dados?formato=json&dataInicial={dataInicial}&dataFinal={dataFinal}
-
-#         # CDI (Diário)
-#         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=01/08/2018&dataFinal=26/08/2018
-
-#         # SELIC (Diário)
-#         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=json&dataInicial=01/08/2018&dataFinal=26/08/2018
-
-#         # IPCA (Mensal)
-#         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
-
-#         # IGPM (Mensal)
-#         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
-        
-#         # INCC (Mensal)
-#         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.192/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
-        
-#         # Poupança (Mensal)
-#         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.196/dados?formato=json&dataInicial=01/01/2018&dataFinal=26/08/2018
-
+#
 #     return "Indice populado com sucesso!"
+
+@api.route('/indice', methods=['GET'])
+def popular_indice():
+    
+    recuperar_indices('433','01/06/2018','28/08/2018')
+    
+    return "Indice populado com sucesso!", 200
+
+def recuperar_indices(codigoIndice, dataInicial, dataFinal):
+    # Padrão de consulta da API
+    # http://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_serie}/dados?formato=json&dataInicial={dataInicial}&dataFinal={dataFinal}
+
+    # CDI (Diário)
+    # https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=01/08/2018&dataFinal=26/08/2018
+    # SELIC (Diário)
+    # https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=json&dataInicial=01/08/2018&dataFinal=26/08/2018
+    # IPCA (Mensal)
+    # https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
+    # IGPM (Mensal)
+    # https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
+    # INCC (Mensal)
+    # https://api.bcb.gov.br/dados/serie/bcdata.sgs.192/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
+    # Poupança (Mensal)
+    # https://api.bcb.gov.br/dados/serie/bcdata.sgs.196/dados?formato=json&dataInicial=01/01/2018&dataFinal=26/08/2018
+
+    urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(codigoIndice,dataInicial,dataFinal)
+    print(urlAPI)
+
+    response = requests.get(urlAPI)
+    if response.status_code == 200:
+        print(response.content)
+        # Varre o dicionário de índices para aplicar os índices mês a mês 
+        # for ano_mes, val_indice in ipca.items():
+        #     # Obtém uma chave para inclusão do novo índice
+        #     chave_indice = datastore_client.key('IPCA')
+        #     # Prepara a nova entidade instanciando-a 
+        #     indice = datastore.Entity(key=chave_indice)
+        #     # Define o valor da(s) propriedade(s) da entidade
+        #     indice['ano_mes'] = ano_mes
+        #     indice['val_indice'] = val_indice
+        #     # Insere o novo índice
+        #     datastore_client.put(indice)

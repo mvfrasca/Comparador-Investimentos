@@ -13,11 +13,11 @@
 # limitations under the License.
 
 # Importando package model (subpasta model)
-import model
+import api
 # Importanto arquivo py de configurações do app
 import config
 # Iniciando o app de acordo com o arquivo de configurações
-app = model.create_app(config)
+app = api.create_app(config)
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
