@@ -85,6 +85,8 @@ def calcular_investimento():
     query_parameters = request.args
     # Resgata o valor do investimento
     val_investimento_inicial = query_parameters.get('valor')
+    dataInicial = query_parameters.get('dataInicial')
+    dataFinal = query_parameters.get('dataFinal')
 
     #print(query_parameters.get('val_investimento'))
 
@@ -108,7 +110,7 @@ def calcular_investimento():
     val_investimento_atualizado = val_investimento_inicial
 
     # Executa a consulta e armazena num dictionary 
-    indices = get_model().get_indices()
+    indices = get_model().get_indices('IPCA', dataInicial, dataFinal)
     #print(indices)
     
     # Define a variável do dicionário que armazenará a evolução do valor investido mês a mês
@@ -121,14 +123,14 @@ def calcular_investimento():
         val_indice = indice['val_indice']
         val_indice = Decimal(val_indice) / Decimal(100)
         val_investimento_atualizado = val_investimento_atualizado + (val_investimento_atualizado * val_indice)
-        evolucao.append({'ano_mes': str(ano_mes), 'indice': str(val_indice), 'valor': str(val_investimento_atualizado)})
+        evolucao.append({'ano_mes': str(ano_mes), 'indice': float(val_indice), 'valor': float(val_investimento_atualizado)})
         i = i + 1
         #print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento_atualizado))
 
     rendimento_bruto = val_investimento_atualizado - val_investimento_inicial
-    resultado_investimento.update({'val_investimento_inicial': str(val_investimento_inicial)})
-    resultado_investimento.update({'val_investimento_atualizado': str(val_investimento_atualizado)})
-    resultado_investimento.update({'rendimento_bruto': str(rendimento_bruto)})
+    resultado_investimento.update({'val_investimento_inicial': float(val_investimento_inicial)})
+    resultado_investimento.update({'val_investimento_atualizado': float(val_investimento_atualizado)})
+    resultado_investimento.update({'rendimento_bruto': float(rendimento_bruto)})
     resultado_investimento.update({'evolucao': evolucao})    
 
     return jsonify(resultado_investimento)
@@ -154,30 +156,45 @@ def calcular_investimento():
 @api.route('/indice', methods=['GET'])
 def popular_indice():
 
-    # Obtém indicadores
-    indicador = "CDI"
-    
-    # Recupera indices da API
-    indices = recuperar_indices('433','01/06/2018','28/08/2018') #.to_dict(flat=True)
-    
-    for x in indices:
-        print("Indice")
-        print(x)
-                   
-        dt_referencia = datetime.strptime(x['data'], "%d/%m/%Y")
-        val_indice = float(x['valor'])
+    # Define a data para referência da consulta
+    dataReferencia = datetime.now().date()
+    # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
+    indicadores = get_model().get_indicadores(dataReferencia)
 
-        indice = {}
-        indice.update({'tp_indice': indicador })
-        indice.update({'dt_referencia': dt_referencia})
-        indice.update({'val_indice': val_indice})
+    # Prepara a data final para parâmetro da consulta à API 
+    dataFinal = datetime.strftime(dataReferencia, "%d/%m/%Y")
+
+    # Percorre os indicadores para consulta e atualização
+    for indicador in indicadores:
+        # Obtém os dados do indicadore
+        serie = indicador['serie']
+        dataInicial = datetime.strftime(indicador['dt_ult_referencia'], "%d/%m/%Y")
         
-        print("Indice: {0}".format(indice))
+        print('Indicador')
+        print(indicador)
 
-        key = get_model().create(indice)
-        print(key)
+        # Recupera indices disponíveis do indicador
+        indices = recuperar_indices(serie,dataInicial,dataFinal)
 
-    #return "Indice populado com sucesso!", 200
+        for x in indices:
+            print("Indice")
+            print(x)
+                    
+            dt_referencia = datetime.strptime(x['data'], "%d/%m/%Y")
+            val_indice = float(x['valor'])
+
+            indice = {}
+            indice.update({'tp_indice': indicador })
+            indice.update({'dt_referencia': dt_referencia})
+            indice.update({'val_indice': val_indice})
+            indice.update({'dt_inclusao': datetime.now()})
+
+            print("Indice: {0}".format(indice))
+
+            key = get_model().create(indice)
+            print(key)
+
+    return "Indice populado com sucesso!", 200
 
 def recuperar_indices(codigoIndice, dataInicial, dataFinal):
     # Padrão de consulta da API
@@ -198,7 +215,6 @@ def recuperar_indices(codigoIndice, dataInicial, dataFinal):
 
     urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(codigoIndice,dataInicial,dataFinal)
     print(urlAPI)
-
     response = requests.get(urlAPI)
     if response.status_code == 200:
         print("Retorno da API: ")
