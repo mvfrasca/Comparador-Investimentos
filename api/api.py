@@ -153,8 +153,27 @@ def calcular_investimento():
 #
 #     return "Indice populado com sucesso!"
 
+# [INICIO INDICADOR]
+@api.route('/indicador', methods=['GET', 'POST'])
+def criar_indicadores():
+    # if request.method == 'POST':
+    #     data = request.form.to_dict(flat=True)
+
+    #     book = get_model().create(data)
+
+    #     return redirect(url_for('.view', id=book['id']))
+    indicador = {}
+    indicador.update({'nome': 'Poupança'})
+    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
+    indicador.update({'periodicidade': 'Mensal'})
+    indicador.update({'serie': '196'})
+    key = get_model().create('Indicadores', indicador, 'poupanca')
+
+    return key
+# [FIM criar_indicadores]
+
 @api.route('/indice', methods=['GET'])
-def popular_indice():
+def put_indices():
 
     # Define a data para referência da consulta
     dataReferencia = datetime.now().date()
@@ -175,7 +194,7 @@ def popular_indice():
         print(indicador)
 
         # Recupera indices disponíveis do indicador
-        indices = recuperar_indices(serie,dataInicial,dataFinal)
+        indices = get_indicesAPI(serie,dataInicial,dataFinal)
 
         indices_consistir = []
         for x in indices:
@@ -201,7 +220,7 @@ def popular_indice():
 
     return "Indice populado com sucesso!", 200
 
-def recuperar_indices(codigoIndice, dataInicial, dataFinal):
+def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
     # Padrão de consulta da API
     # http://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_serie}/dados?formato=json&dataInicial={dataInicial}&dataFinal={dataFinal}
 
@@ -239,7 +258,7 @@ def recuperar_indices(codigoIndice, dataInicial, dataFinal):
         #     datastore_client.put(indice)
 
 @api.route('/indicador/all', methods=['GET'])
-def retorna_indicadores():
+def list_indicadores():
     # Define a data para referência da consulta
     dataReferencia = datetime.now().date()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
@@ -248,7 +267,7 @@ def retorna_indicadores():
     return jsonify(indicadores)
 
 @api.route('/indicador/<id>', methods=['GET'])
-def retorna_indicador(id):
+def get_indicador(id):
     # Obtém od dados do indicador
     indicador = get_model().read_indicador(id)
     

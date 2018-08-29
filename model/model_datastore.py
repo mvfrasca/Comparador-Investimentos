@@ -120,12 +120,12 @@ def read_indicador(id):
     return list(results)
 
 # [START update]
-def update(data, id=None):
+def update(kind, data, id=None):
     ds = get_client()
     if id:
-        key = ds.key('Indices', int(id))
+        key = ds.key(kind, int(id))
     else:
-        key = ds.key('Indices')
+        key = ds.key(kind)
 
     # entity = datastore.Entity(
     #     key=key) ,
