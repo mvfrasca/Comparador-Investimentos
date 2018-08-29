@@ -177,6 +177,7 @@ def popular_indice():
         # Recupera indices disponíveis do indicador
         indices = recuperar_indices(serie,dataInicial,dataFinal)
 
+        indices_consistir = []
         for x in indices:
             print("Indice")
             print(x)
@@ -192,8 +193,11 @@ def popular_indice():
 
             print("Indice: {0}".format(indice))
 
-            key = get_model().create(indice)
-            print(key)
+            # key = get_model().create(indice)
+            # print(key)
+            indices_consistir.append(indice)
+
+        get_model().update_multi(indices_consistir)
 
     return "Indice populado com sucesso!", 200
 

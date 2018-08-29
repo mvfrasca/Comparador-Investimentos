@@ -143,3 +143,20 @@ def delete(id):
     ds = get_client()
     key = ds.key('Indices', int(id))
     ds.delete(key)
+
+
+# [START update]
+def update_multi(lista):
+    ds = get_client()
+
+    entities = []
+    for item in lista:
+        key = ds.key('Indices')
+        entity = datastore.Entity(key=key)
+        entity.update(item)
+        entities.append(entity)
+    
+    ds.put_multi(entities)
+    
+    #return from_datastore(entity)
+    return
