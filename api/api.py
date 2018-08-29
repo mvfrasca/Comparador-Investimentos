@@ -86,9 +86,11 @@ def calcular_investimento():
     # Resgata o valor do investimento
     val_investimento_inicial = query_parameters.get('valor')
     indicador = query_parameters.get('indicador')
-    dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
-    dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
-
+    dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y").date()
+    dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y").date()
+    print("Entrada:")
+    print(dataInicial)
+    print(dataFinal)
     #print(query_parameters.get('val_investimento'))
 
     # Valida se parâmetro do valor do investimento foi informado
@@ -287,7 +289,10 @@ def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
 
 @api.route('/indicador/all', methods=['GET'])
 def list_indicadores():
+    # Obtém argumentos
+    query_parameters = request.args
     # Define a data para referência da consulta
+    dataReferencia = datetime.strptime(query_parameters.get('dt_referencia'), "%d/%m/%Y").date()
     dataReferencia = datetime.now().date()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
     indicadores = get_model().get_indicadores(dataReferencia)
