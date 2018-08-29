@@ -168,6 +168,7 @@ def popular_indice():
     for indicador in indicadores:
         # Obtém os dados do indicadore
         serie = indicador['serie']
+        tp_indice = indicador['nome']
         dataInicial = datetime.strftime(indicador['dt_ult_referencia'], "%d/%m/%Y")
         
         print('Indicador')
@@ -184,7 +185,7 @@ def popular_indice():
             val_indice = float(x['valor'])
 
             indice = {}
-            indice.update({'tp_indice': indicador })
+            indice.update({'tp_indice': tp_indice })
             indice.update({'dt_referencia': dt_referencia})
             indice.update({'val_indice': val_indice})
             indice.update({'dt_inclusao': datetime.now()})
