@@ -85,8 +85,8 @@ def calcular_investimento():
     query_parameters = request.args
     # Resgata o valor do investimento
     val_investimento_inicial = query_parameters.get('valor')
-    dataInicial = query_parameters.get('dataInicial')
-    dataFinal = query_parameters.get('dataFinal')
+    dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
+    dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
 
     #print(query_parameters.get('val_investimento'))
 
