@@ -109,10 +109,15 @@ def from_datastore(entity):
 
 def read(id):
     ds = get_client()
-    key = ds.key('Indicador', id)
+    key = ds.key('Indice', id)
     results = ds.get(key)
     return from_datastore(results)
 
+def read_indicador(id):
+    ds = get_client()
+    key = ds.key('Indicador', id)
+    results = ds.get(key)
+    return list(results)
 
 # [START update]
 def update(data, id=None):

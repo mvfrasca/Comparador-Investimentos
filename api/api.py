@@ -250,6 +250,6 @@ def retorna_indicadores():
 @api.route('/indicador/<id>', methods=['GET'])
 def retorna_indicador(id):
     # Obtém od dados do indicador
-    indicador = get_model().read(id)
+    indicador = get_model().read_indicador(id)
     
     return jsonify(indicador)
