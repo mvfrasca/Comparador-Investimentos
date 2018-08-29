@@ -233,3 +233,12 @@ def recuperar_indices(codigoIndice, dataInicial, dataFinal):
         #     indice['val_indice'] = val_indice
         #     # Insere o novo índice
         #     datastore_client.put(indice)
+
+@api.route('/indicador/all', methods=['GET'])
+def retorna_indicadores():
+    # Define a data para referência da consulta
+    dataReferencia = datetime.now().date()
+    # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
+    indicadores = get_model().get_indicadores(dataReferencia)
+    
+    return jsonify(indicadores)
