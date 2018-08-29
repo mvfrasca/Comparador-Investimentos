@@ -1,0 +1,9 @@
+indexes:
+
+- kind: Indices
+  properties:
+  - name: tp_indice
+    direction: asc
+  - name: dt_referencia
+    direction: asc
+  

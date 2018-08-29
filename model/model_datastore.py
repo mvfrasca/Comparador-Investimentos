@@ -109,7 +109,7 @@ def from_datastore(entity):
 
 def read(id):
     ds = get_client()
-    key = ds.key('Indices', int(id))
+    key = ds.key('Indicador', id)
     results = ds.get(key)
     return from_datastore(results)
 

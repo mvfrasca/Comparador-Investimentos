@@ -246,3 +246,10 @@ def retorna_indicadores():
     indicadores = get_model().get_indicadores(dataReferencia)
     
     return jsonify(indicadores)
+
+@api.route('/indicador/<id>', methods=['GET'])
+def retorna_indicador(id):
+    # Obtém od dados do indicador
+    indicador = get_model().read(id)
+    
+    return jsonify(indicador)
