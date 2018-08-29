@@ -85,7 +85,7 @@ def from_datastore(entity):
     if isinstance(entity, builtin_list):
         entity = entity.pop()
 
-    entity['id'] = entity.key.id
+    entity['id'] = entity.key.name
     return entity
 # [END from_datastore]
 
@@ -115,15 +115,16 @@ def read(id):
 
 def read_indicador(id):
     ds = get_client()
-    key = ds.key('Indicador', id)
+    key = ds.key('Indicadores', id)
     results = ds.get(key)
-    return list(results)
+    return from_datastore(results)
+    #return results
 
 # [START update]
 def update(kind, data, id=None):
     ds = get_client()
     if id:
-        key = ds.key(kind, int(id))
+        key = ds.key(kind, id)
     else:
         key = ds.key(kind)
 

@@ -85,6 +85,7 @@ def calcular_investimento():
     query_parameters = request.args
     # Resgata o valor do investimento
     val_investimento_inicial = query_parameters.get('valor')
+    indicador = query_parameters.get('indicador')
     dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
     dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
 
@@ -110,7 +111,7 @@ def calcular_investimento():
     val_investimento_atualizado = val_investimento_inicial
 
     # Executa a consulta e armazena num dictionary 
-    indices = get_model().get_indices('IPCA', dataInicial, dataFinal)
+    indices = get_model().get_indices(indicador, dataInicial, dataFinal)
     #print(indices)
     
     # Define a variável do dicionário que armazenará a evolução do valor investido mês a mês
@@ -119,7 +120,7 @@ def calcular_investimento():
     i = 0
     # Varre o dicionário de índices para aplicar os índices mês a mês 
     for indice in indices:
-        ano_mes = indice['ano_mes']
+        ano_mes = datetime.strftime(indice['dt_referencia'], "%Y-%m")
         val_indice = indice['val_indice']
         val_indice = Decimal(val_indice) / Decimal(100)
         val_investimento_atualizado = val_investimento_atualizado + (val_investimento_atualizado * val_indice)
@@ -162,14 +163,41 @@ def criar_indicadores():
     #     book = get_model().create(data)
 
     #     return redirect(url_for('.view', id=book['id']))
+    keys = []
+    # Poupança
     indicador = {}
     indicador.update({'nome': 'Poupança'})
     indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
     indicador.update({'periodicidade': 'Mensal'})
     indicador.update({'serie': '196'})
     key = get_model().create('Indicadores', indicador, 'poupanca')
-
-    return key
+    keys.append({key})
+    # IPCA
+    indicador = {}
+    indicador.update({'nome': 'IPCA'})
+    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
+    indicador.update({'periodicidade': 'Mensal'})
+    indicador.update({'serie': '433'})
+    key = get_model().create('Indicadores', indicador, 'ipca')
+    keys.append({key})
+    # CDI
+    indicador = {}
+    indicador.update({'nome': 'CDI'})
+    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
+    indicador.update({'periodicidade': 'Diário'})
+    indicador.update({'serie': '12'})
+    key = get_model().create('Indicadores', indicador, 'cdi')
+    keys.append({key})
+    # SELIC
+    indicador = {}
+    indicador.update({'nome': 'SELIC'})
+    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
+    indicador.update({'periodicidade': 'Diário'})
+    indicador.update({'serie': '12'})
+    key = get_model().create('Indicadores', indicador, 'selic')
+    keys.append({key})
+    
+    return jsonify(keys)
 # [FIM criar_indicadores]
 
 @api.route('/indice', methods=['GET'])
