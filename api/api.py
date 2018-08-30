@@ -206,7 +206,7 @@ def criar_indicadores():
 def put_indices():
 
     # Define a data para referência da consulta
-    dataReferencia = datetime.now().date()
+    dataReferencia = datetime.now()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
     indicadores = get_model().get_indicadores(dataReferencia)
 
