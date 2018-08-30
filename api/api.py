@@ -20,6 +20,18 @@ from decimal import *
 from datetime import datetime
 # Importando classes para tratamento de Json e requests HTTP
 import json, requests
+# Importa o módulo Helper
+import helper
+from helper import _success
+from helper import _error
+from helper import _variable
+from helper import _clean_attributes
+# Importa o módulo de log
+import logging
+
+# Inicializar configura o objeto para gravação de logs
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Criando blueprint do módulo da API
 api = Blueprint('api', __name__)
@@ -85,7 +97,7 @@ def calcular_investimento():
     query_parameters = request.args
     # Resgata o valor do investimento
     val_investimento_inicial = query_parameters.get('valor')
-    indicador = query_parameters.get('indicador')
+    indicador = query_parameters.get('indicador').lower()
     dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
     dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
     print("Entrada:")
@@ -217,38 +229,72 @@ def put_indices():
     for indicador in indicadores:
         # Obtém os dados do indicadore
         serie = indicador['serie']
-        tp_indice = indicador['nome']
-        dataInicial = datetime.strftime(indicador['dt_ult_referencia'], "%d/%m/%Y")
+        tpIndice = indicador['id']
+        dtUltReferencia = datetime.strftime(indicador['dt_ult_referencia'], "%d/%m/%Y")
+        dataInicial = dtUltReferencia
         
         print('Indicador')
         print(indicador)
 
         # Recupera indices disponíveis do indicador
-        indices = get_indicesAPI(serie,dataInicial,dataFinal)
+        indicesAPI = get_indicesAPI(serie,dataInicial,dataFinal)
 
-        indices_consistir = []
-        for x in indices:
-            print("Indice")
-            print(x)
-                    
-            dt_referencia = datetime.strptime(x['data'], "%d/%m/%Y")
-            val_indice = float(x['valor'])
+        logger.info("Índices recuperados da API - ")
+        logger.info('indicesAPI={}'.format(indicesAPI))
 
+        # Inicializa coleção e contadores
+        indicesConsistir = []
+        contadorParcial = 0
+        contador = 0
+
+        # Varre a lista de índices retornadas pela API
+        for indiceAPI in indicesAPI:
+            
+            print("Indice API:")
+            print(indiceAPI)
+            # Recupera as propriedades do índice (data e valor)       
+            dt_referencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
+            val_indice = float(indiceAPI['valor'])
+            # Popula a estrutura de índice a ser consistida
             indice = {}
-            indice.update({'tp_indice': tp_indice })
+            indice.update({'tp_indice': tpIndice })
             indice.update({'dt_referencia': dt_referencia})
             indice.update({'val_indice': val_indice})
             indice.update({'dt_inclusao': datetime.now()})
 
             print("Indice: {0}".format(indice))
 
-            # key = get_model().create(indice)
-            # print(key)
-            indices_consistir.append(indice)
+            # Inclui o índice na coleção de índices a ser consistida em banco de dados
+            indicesConsistir.append(indice)
 
-        get_model().update_multi(indices_consistir)
+            # Atualiza contadores
+            contadorParcial = contadorParcial + 1
+            contador = contador + 1
 
-    return "Indice populado com sucesso!", 200
+            # Caso coleção chegou em 100 itens libera a gravação em lote em banco de dados 
+            # para não sobrecarregar chamada à API do banco de dados
+            if contadorParcial == 100:
+                get_model().update_multi(indicesConsistir)
+                indicesConsistir = []
+                contadorParcial = 0
+
+        # Realiza a gravação em lote dos índices no banco de dados caso algum registro tenha
+        # sido tratado
+        if contadorParcial > 0:
+            get_model().update_multi(indicesConsistir)
+
+        # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
+        # para controle de próximas atualizações
+        indicador['dt_ult_referencia'] = dt_referencia
+        get_model().update("Indicadores", indicador, tpIndice)
+
+        # Verifica a quantidade de registros atualizados para retornar mensagem mais adequada
+        if contador == 0:
+            msgRetorno = "Banco Central não retornou novos registros a serem atualizados. Data do último índice armazenado: {}.".format(dtUltReferencia)
+        elif contador > 0:
+            msgRetorno = "Índice populado com sucesso! {0} registros atualizados. Data do último índice armazenado: {1}.".format(contador, dtUltReferencia)
+
+    return _success({ 'message': msgRetorno }, 200)
 
 def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
     # Padrão de consulta da API
