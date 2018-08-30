@@ -86,8 +86,8 @@ def calcular_investimento():
     # Resgata o valor do investimento
     val_investimento_inicial = query_parameters.get('valor')
     indicador = query_parameters.get('indicador')
-    dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y").date()
-    dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y").date()
+    dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
+    dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
     print("Entrada:")
     print(dataInicial)
     print(dataFinal)
@@ -122,11 +122,11 @@ def calcular_investimento():
     i = 0
     # Varre o dicionário de índices para aplicar os índices mês a mês 
     for indice in indices:
-        ano_mes = datetime.strftime(indice['dt_referencia'], "%Y-%m")
+        data = datetime.strftime(indice['dt_referencia'], "%Y-%m-%d")
         val_indice = indice['val_indice']
         val_indice = Decimal(val_indice) / Decimal(100)
         val_investimento_atualizado = val_investimento_atualizado + (val_investimento_atualizado * val_indice)
-        evolucao.append({'ano_mes': str(ano_mes), 'indice': float(val_indice), 'valor': float(val_investimento_atualizado)})
+        evolucao.append({'data': data, 'indice': float(val_indice), 'valor': float(val_investimento_atualizado)})
         i = i + 1
         #print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento_atualizado))
 
@@ -292,8 +292,8 @@ def list_indicadores():
     # Obtém argumentos
     query_parameters = request.args
     # Define a data para referência da consulta
-    dataReferencia = datetime.strptime(query_parameters.get('dt_referencia'), "%d/%m/%Y").date()
-    dataReferencia = datetime.now().date()
+    dataReferencia = datetime.strptime(query_parameters.get('dt_referencia'), "%d/%m/%Y")
+    # dataReferencia = datetime.now()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
     indicadores = get_model().get_indicadores(dataReferencia)
     

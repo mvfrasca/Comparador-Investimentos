@@ -33,8 +33,7 @@ def get_indicadores(dt_referencia):
     # Prepara a query para consultar valores do índice IPCA
     query = ds.query(kind='Indicadores')
     # Inclui filtros da consulta
-    query.add_filter('dt_ult_referencia','<', Date(' + dt_referencia.isoformat() + '))
-    
+    query.add_filter('dt_ult_referencia','<', dt_referencia)
     #Define ordenação da consulta
     query.order = ['dt_ult_referencia']
     # Executa a consulta e armazena num dictionary 
@@ -49,12 +48,13 @@ def get_indices(indicador, dataInicial, dataFinal):
     query = ds.query(kind='Indices')
     # Inclui filtros da consulta
     query.add_filter('tp_indice','=',indicador)
-    query.add_filter('dt_referencia','>=','DATE(' + dataInicial.isoformat() + ')')
-    query.add_filter('dt_referencia','<=','DATE(' + dataFinal.isoformat() + ')')
+    query.add_filter('dt_referencia','>=', dataInicial)
+    query.add_filter('dt_referencia','<=', dataFinal)
     #Define ordenação da consulta
     query.order = ['dt_referencia']
     # Executa a consulta e armazena num dictionary 
     indices = list(query.fetch())
+    print(indices)
     
     return indices
 
