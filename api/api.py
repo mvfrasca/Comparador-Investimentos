@@ -113,7 +113,7 @@ def calcular_investimento():
     val_investimento_atualizado = val_investimento_inicial
 
     # Executa a consulta e armazena num dictionary 
-    indices = get_model().get_indices(indicador, dataInicial, dataFinal)
+    indices = get_model().list_indices(indicador, dataInicial, dataFinal)
     #print(indices)
     
     # Define a variável do dicionário que armazenará a evolução do valor investido mês a mês
@@ -208,7 +208,7 @@ def put_indices():
     # Define a data para referência da consulta
     dataReferencia = datetime.now()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
-    indicadores = get_model().get_indicadores(dataReferencia)
+    indicadores = get_model().list_indicadores(dataReferencia)
 
     # Prepara a data final para parâmetro da consulta à API 
     dataFinal = datetime.strftime(dataReferencia, "%d/%m/%Y")
@@ -295,7 +295,7 @@ def list_indicadores():
     dataReferencia = datetime.strptime(query_parameters.get('dt_referencia'), "%d/%m/%Y")
     # dataReferencia = datetime.now()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
-    indicadores = get_model().get_indicadores(dataReferencia)
+    indicadores = get_model().list_indicadores(dataReferencia)
     
     return jsonify(indicadores)
 

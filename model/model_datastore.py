@@ -27,7 +27,7 @@ def get_client():
     # return datastore.Client(current_app.config['PROJECT_ID'])
     return datastore.Client()
 
-def get_indicadores(dt_referencia):
+def list_indicadores(dt_referencia):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
@@ -37,11 +37,14 @@ def get_indicadores(dt_referencia):
     #Define ordenação da consulta
     query.order = ['dt_ult_referencia']
     # Executa a consulta e armazena num dictionary 
-    indicadores = list(query.fetch())
-    
-    return indicadores
+    #lista = list(query.fetch())
+    lista = query.fetch()
 
-def get_indices(indicador, dataInicial, dataFinal):
+    entities = builtin_list(map(from_datastore, lista))
+    
+    return entities
+
+def list_indices(indicador, dataInicial, dataFinal):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
