@@ -269,16 +269,19 @@ def put_indices():
                 get_model().update_multi("Indices", indicesConsistir)
                 indicesConsistir = []
                 contadorParcial = 0
+                # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
+                # para controle de próximas atualizações
+                indicador['dt_ult_referencia'] = dtReferencia
+                get_model().update("Indicadores", indicador, tpIndice)
 
         # Realiza a gravação em lote dos índices no banco de dados caso algum registro tenha
         # sido tratado
         if contadorParcial > 0:
             get_model().update_multi("Indices", indicesConsistir)
-
-        # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
-        # para controle de próximas atualizações
-        indicador['dt_ult_referencia'] = dtReferencia
-        get_model().update("Indicadores", indicador, tpIndice)
+            # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
+            # para controle de próximas atualizações
+            indicador['dt_ult_referencia'] = dtReferencia
+            get_model().update("Indicadores", indicador, tpIndice)
 
         # Verifica a quantidade de registros atualizados para retornar mensagem mais adequada
         if contador == 0:
