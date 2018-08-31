@@ -1,0 +1,30 @@
+[
+    {
+        "id": "poupanca",
+        "nome": "Poupança",
+        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "periodicidade": "Mensal",
+        "serie": "196"
+    },
+    {
+        "id": "ipca",
+        "nome": "IPCA",
+        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "periodicidade": "Mensal",
+        "serie": "433"
+    },
+    {
+        "id": "cdi",
+        "nome": "CDI",
+        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "periodicidade": "Diário",
+        "serie": "12"
+    },
+    {
+        "id": "selic",
+        "nome": "SELIC",
+        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "periodicidade": "Diário",
+        "serie": "11"
+    }
+]

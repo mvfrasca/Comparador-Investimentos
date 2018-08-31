@@ -1,5 +1,6 @@
 import json
 import os
+from flask import jsonify
 
 # Get variavel de ambiente
 def _variable(name):
@@ -24,7 +25,7 @@ def _error(message, code):
             'Content-Type': 'application/json',
         },
     }
-    return response
+    return jsonify(response)
 
 # Tratamento da mensagem de retorno com sucesso
 def _success(message, code):
@@ -35,7 +36,7 @@ def _success(message, code):
             'Content-Type': 'application/json',
         },
     }
-    return response
+    return jsonify(response)
 
 # Limpar atributos vazio
 def _clean_attributes(data):
@@ -46,3 +47,6 @@ def _clean_attributes(data):
 # convert date to json
 def _date_handler(obj):
     return obj.isoformat() if hasattr(obj, 'isoformat') else obj
+
+class ClientException(Exception):
+    pass

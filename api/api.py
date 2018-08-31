@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from model import get_model
 from flask import Blueprint, redirect, render_template, request, url_for, jsonify
 # Importanto módulo para tratamento de números decimais
@@ -21,11 +20,12 @@ from datetime import datetime
 # Importando classes para tratamento de Json e requests HTTP
 import json, requests
 # Importa o módulo Helper
-import helper
-from helper import _success
-from helper import _error
-from helper import _variable
-from helper import _clean_attributes
+import utils.helper
+from utils.helper import _success
+from utils.helper import _error
+from utils.helper import _variable
+from utils.helper import _clean_attributes
+
 # Importa o módulo de log
 import logging
 
@@ -150,24 +150,6 @@ def calcular_investimento():
 
     return jsonify(resultado_investimento)
 
-# @api.route('/indice', methods=['GET'])
-# def popular_indice():
-#     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
-#     datastore_client = datastore.Client()
-#     # Varre o dicionário de índices para aplicar os índices mês a mês 
-#     for ano_mes, val_indice in ipca.items():
-#         # Obtém uma chave para inclusão do novo índice
-#         chave_indice = datastore_client.key('IPCA')
-#         # Prepara a nova entidade instanciando-a 
-#         indice = datastore.Entity(key=chave_indice)
-#         # Define o valor da(s) propriedade(s) da entidade
-#         indice['ano_mes'] = ano_mes
-#         indice['val_indice'] = val_indice
-#         # Insere o novo índice
-#         datastore_client.put(indice)
-#
-#     return "Indice populado com sucesso!"
-
 # [INICIO INDICADOR]
 @api.route('/indicador', methods=['GET', 'POST'])
 def criar_indicadores():
@@ -177,6 +159,13 @@ def criar_indicadores():
     #     book = get_model().create(data)
 
     #     return redirect(url_for('.view', id=book['id']))
+    
+    # with open('static\json\indicadores.json') as f:
+    #     indicadores = f.buffer().json()
+    #     # indicadores = list(map(lambda x: dict(x.keys(), x.values()), list(f)))
+    # print(indicadores)
+    # get_model().update_multi("Indicadores", indicadores)
+
     keys = []
     # Poupança
     indicador = {}
@@ -186,6 +175,7 @@ def criar_indicadores():
     indicador.update({'serie': '196'})
     key = get_model().create('Indicadores', indicador, 'poupanca')
     keys.append({key})
+    print(indicador)
     # IPCA
     indicador = {}
     indicador.update({'nome': 'IPCA'})
@@ -210,8 +200,8 @@ def criar_indicadores():
     indicador.update({'serie': '12'})
     key = get_model().create('Indicadores', indicador, 'selic')
     keys.append({key})
-    
-    return jsonify(keys)
+
+    return _success({ 'message': 'Indicadores incluidos com sucesso!' }, 200)
 # [FIM criar_indicadores]
 
 @api.route('/indice', methods=['GET'])
@@ -252,14 +242,16 @@ def put_indices():
             
             print("Indice API:")
             print(indiceAPI)
-            # Recupera as propriedades do índice (data e valor)       
-            dt_referencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
-            val_indice = float(indiceAPI['valor'])
+            # Recupera as propriedades do índice (data e valor)
+            dtReferencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
+            valorIndice = float(indiceAPI['valor'])
+            id = tpIndice + '-' + datetime.strftime(dtReferencia, "%Y%m%d")
             # Popula a estrutura de índice a ser consistida
             indice = {}
+            indice.update({'id': id})
             indice.update({'tp_indice': tpIndice })
-            indice.update({'dt_referencia': dt_referencia})
-            indice.update({'val_indice': val_indice})
+            indice.update({'dt_referencia': dtReferencia})
+            indice.update({'val_indice': valorIndice})
             indice.update({'dt_inclusao': datetime.now()})
 
             print("Indice: {0}".format(indice))
@@ -274,18 +266,18 @@ def put_indices():
             # Caso coleção chegou em 100 itens libera a gravação em lote em banco de dados 
             # para não sobrecarregar chamada à API do banco de dados
             if contadorParcial == 100:
-                get_model().update_multi(indicesConsistir)
+                get_model().update_multi("Indices", indicesConsistir)
                 indicesConsistir = []
                 contadorParcial = 0
 
         # Realiza a gravação em lote dos índices no banco de dados caso algum registro tenha
         # sido tratado
         if contadorParcial > 0:
-            get_model().update_multi(indicesConsistir)
+            get_model().update_multi("Indices", indicesConsistir)
 
         # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
         # para controle de próximas atualizações
-        indicador['dt_ult_referencia'] = dt_referencia
+        indicador['dt_ult_referencia'] = dtReferencia
         get_model().update("Indicadores", indicador, tpIndice)
 
         # Verifica a quantidade de registros atualizados para retornar mensagem mais adequada
@@ -335,19 +327,14 @@ def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
 
 @api.route('/indicador/all', methods=['GET'])
 def list_indicadores():
-    # Obtém argumentos
-    query_parameters = request.args
-    # Define a data para referência da consulta
-    dataReferencia = datetime.strptime(query_parameters.get('dt_referencia'), "%d/%m/%Y")
-    # dataReferencia = datetime.now()
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
-    indicadores = get_model().list_indicadores(dataReferencia)
+    indicadores = get_model().list_indicadores()
     
     return jsonify(indicadores)
 
 @api.route('/indicador/<id>', methods=['GET'])
 def get_indicador(id):
     # Obtém od dados do indicador
-    indicador = get_model().read_indicador(id)
+    indicador = get_model().read_indicador(id.lower())
     
     return jsonify(indicador)
