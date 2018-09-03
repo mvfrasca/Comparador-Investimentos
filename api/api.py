@@ -171,8 +171,9 @@ def criar_indicadores():
     indicador = {}
     indicador.update({'nome': 'Poupança'})
     indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'Mensal'})
+    indicador.update({'periodicidade': 'mensal'})
     indicador.update({'serie': '196'})
+    indicador.update({'qtd_regs_ult_atualiz': 0})
     key = get_model().create('Indicadores', indicador, 'poupanca')
     keys.append({key})
     print(indicador)
@@ -180,24 +181,27 @@ def criar_indicadores():
     indicador = {}
     indicador.update({'nome': 'IPCA'})
     indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'Mensal'})
+    indicador.update({'periodicidade': 'mensal'})
     indicador.update({'serie': '433'})
+    indicador.update({'qtd_regs_ult_atualiz': 0})
     key = get_model().create('Indicadores', indicador, 'ipca')
     keys.append({key})
     # CDI
     indicador = {}
     indicador.update({'nome': 'CDI'})
     indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'Diário'})
+    indicador.update({'periodicidade': 'diario'})
     indicador.update({'serie': '12'})
+    indicador.update({'qtd_regs_ult_atualiz': 0})
     key = get_model().create('Indicadores', indicador, 'cdi')
     keys.append({key})
     # SELIC
     indicador = {}
     indicador.update({'nome': 'SELIC'})
     indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'Diário'})
+    indicador.update({'periodicidade': 'diario'})
     indicador.update({'serie': '12'})
+    indicador.update({'qtd_regs_ult_atualiz': 0})
     key = get_model().create('Indicadores', indicador, 'selic')
     keys.append({key})
 
@@ -207,28 +211,37 @@ def criar_indicadores():
 @api.route('/indice', methods=['GET'])
 def put_indices():
 
-    # Define a data para referência da consulta
-    dataReferencia = datetime.now()
+    # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
+    # zerados caso contrário datasotore não reconhece)
+    dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+    # Inicializa o contador geral de registros atualizados
+    contadorTotal = 0
     # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
-    indicadores = get_model().list_indicadores(dataReferencia)
-
-    # Prepara a data final para parâmetro da consulta à API 
-    dataFinal = datetime.strftime(dataReferencia, "%d/%m/%Y")
+    indicadores = get_model().list_indicadores(dataAtual)
 
     # Percorre os indicadores para consulta e atualização
     for indicador in indicadores:
-        # Obtém os dados do indicadore
+        # Obtém os dados do indicador
         serie = indicador['serie']
-        tpIndice = indicador['id']
-        dtUltReferencia = datetime.strftime(indicador['dt_ult_referencia'], "%d/%m/%Y")
-        dataInicial = dtUltReferencia
+        tipoIndice = indicador['id']
+        dataUltReferencia = indicador['dt_ult_referencia']
+        periodicidade = indicador['periodicidade']
         
+        # Loga os estado atual do indicador
+        logger.info("Índicador a receber atualização de índices - ")
+        logger.info('indicador={}'.format(indicador))
         print('Indicador')
         print(indicador)
 
-        # Recupera indices disponíveis do indicador
-        indicesAPI = get_indicesAPI(serie,dataInicial,dataFinal)
+        # Caso o índicador seja de peridicidade mensal e o mês da última atualização é igual ao 
+        # mês atual pula para o próximo indicador
+        if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
+            continue     
 
+        # Recupera indices disponíveis do indicador desde a última atualização até hoje 
+        indicesAPI = get_indicesAPI(serie,dataUltReferencia,dataAtual)
+
+        # Loga os índices retornados pela API
         logger.info("Índices recuperados da API - ")
         logger.info('indicesAPI={}'.format(indicesAPI))
 
@@ -243,14 +256,22 @@ def put_indices():
             print("Indice API:")
             print(indiceAPI)
             # Recupera as propriedades do índice (data e valor)
-            dtReferencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
+            dataReferencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
             valorIndice = float(indiceAPI['valor'])
-            id = tpIndice + '-' + datetime.strftime(dtReferencia, "%Y%m%d")
+
+            # Verifica se o índice anterior à data do último índice atualizado 
+            # e caso positivo pula para o próximo (API do BC retornar sempre um dia pra tras)]
+            print(dataReferencia.isocalendar())
+            print(dataUltReferencia.isocalendar())
+            if (dataReferencia.isocalendar() <= dataUltReferencia.isocalendar()):
+                continue
+
+            id = tipoIndice + '-' + datetime.strftime(dataReferencia, "%Y%m%d")
             # Popula a estrutura de índice a ser consistida
             indice = {}
             indice.update({'id': id})
-            indice.update({'tp_indice': tpIndice })
-            indice.update({'dt_referencia': dtReferencia})
+            indice.update({'tp_indice': tipoIndice })
+            indice.update({'dt_referencia': dataReferencia})
             indice.update({'val_indice': valorIndice})
             indice.update({'dt_inclusao': datetime.now()})
 
@@ -271,8 +292,9 @@ def put_indices():
                 contadorParcial = 0
                 # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
                 # para controle de próximas atualizações
-                indicador['dt_ult_referencia'] = dtReferencia
-                get_model().update("Indicadores", indicador, tpIndice)
+                indicador['dt_ult_referencia'] = dataReferencia
+                indicador['qtd_regs_ult_atualiz'] = contador
+                get_model().update("Indicadores", indicador, tipoIndice)
 
         # Realiza a gravação em lote dos índices no banco de dados caso algum registro tenha
         # sido tratado
@@ -280,16 +302,23 @@ def put_indices():
             get_model().update_multi("Indices", indicesConsistir)
             # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
             # para controle de próximas atualizações
-            indicador['dt_ult_referencia'] = dtReferencia
-            get_model().update("Indicadores", indicador, tpIndice)
+            indicador['dt_ult_referencia'] = dataReferencia
+            indicador['dt_ult_atualiz'] = datetime.now()
+            indicador['qtd_regs_ult_atualiz'] = contador
+            get_model().update("Indicadores", indicador, tipoIndice)
 
-        # Verifica a quantidade de registros atualizados para retornar mensagem mais adequada
-        if contador == 0:
-            msgRetorno = "Banco Central não retornou novos registros a serem atualizados. Data do último índice armazenado: {}.".format(dtUltReferencia)
-        elif contador > 0:
-            msgRetorno = "Índice populado com sucesso! {0} registros atualizados. Data do último índice armazenado: {1}.".format(contador, dtUltReferencia)
+        contadorTotal = contadorTotal + contador
 
-    return _success({ 'message': msgRetorno }, 200)
+    # Verifica a quantidade de registros atualizados para retornar mensagem mais adequada
+    if contadorTotal == 0:
+        msgRetorno = "Banco Central não retornou novos registros a serem atualizados."
+    elif contadorTotal > 0:
+        msgRetorno = "Índices atualizados com sucesso! Total de {} registro(s) atualizado(s).".format(contadorTotal)
+
+    resposta = {'message': msgRetorno}
+    resposta.update({'indicadores': get_model().list_indicadores() })
+
+    return _success(resposta, 200)
 
 def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
     # Padrão de consulta da API
@@ -308,9 +337,15 @@ def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
     # Poupança (Mensal)
     # https://api.bcb.gov.br/dados/serie/bcdata.sgs.196/dados?formato=json&dataInicial=01/01/2018&dataFinal=26/08/2018
 
+    # Formatando datas com o formato string esperado pela API
+    dataInicial = datetime.strftime(dataInicial, "%d/%m/%Y")
+    dataFinal = datetime.strftime(dataFinal, "%d/%m/%Y")
+    # Montando a API
     urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(codigoIndice,dataInicial,dataFinal)
     print(urlAPI)
+    # Chamando e obtendo a resposta da API
     response = requests.get(urlAPI)
+    # Validando o retorno
     if response.status_code == 200:
         print("Retorno da API: ")
         print(response.json()) 
