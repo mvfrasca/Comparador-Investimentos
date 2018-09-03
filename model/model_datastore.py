@@ -58,7 +58,6 @@ def list_indices(indicador, dataInicial, dataFinal):
     query.order = ['dt_referencia']
     # Executa a consulta e armazena num dictionary 
     indices = list(query.fetch())
-    print(indices)
 
     return indices
 
