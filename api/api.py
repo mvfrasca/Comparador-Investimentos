@@ -230,9 +230,7 @@ def put_indices():
         # Loga os estado atual do indicador
         logger.info("Índicador a receber atualização de índices - ")
         logger.info('indicador={}'.format(indicador))
-        print('Indicador')
-        print(indicador)
-
+ 
         # Caso o índicador seja de peridicidade mensal e o mês da última atualização é igual ao 
         # mês atual pula para o próximo indicador
         if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
@@ -253,17 +251,16 @@ def put_indices():
         # Varre a lista de índices retornadas pela API
         for indiceAPI in indicesAPI:
             
-            print("Indice API:")
-            print(indiceAPI)
+            logger.info("Índice a ser atualizado: {}".format(tipoIndice))
+            logger.info('indiceAPI={}'.format(indiceAPI))
             # Recupera as propriedades do índice (data e valor)
             dataReferencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
             valorIndice = float(indiceAPI['valor'])
 
             # Verifica se o índice anterior à data do último índice atualizado 
             # e caso positivo pula para o próximo (API do BC retornar sempre um dia pra tras)]
-            print(dataReferencia.isocalendar())
-            print(dataUltReferencia.isocalendar())
             if (dataReferencia.isocalendar() <= dataUltReferencia.isocalendar()):
+                logger.info('Índice descartado por ser anterior a última atualização')
                 continue
 
             id = tipoIndice + '-' + datetime.strftime(dataReferencia, "%Y%m%d")
@@ -274,8 +271,6 @@ def put_indices():
             indice.update({'dt_referencia': dataReferencia})
             indice.update({'val_indice': valorIndice})
             indice.update({'dt_inclusao': datetime.now()})
-
-            print("Indice: {0}".format(indice))
 
             # Inclui o índice na coleção de índices a ser consistida em banco de dados
             indicesConsistir.append(indice)
@@ -293,6 +288,7 @@ def put_indices():
                 # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
                 # para controle de próximas atualizações
                 indicador['dt_ult_referencia'] = dataReferencia
+                indicador['dt_ult_atualiz'] = datetime.now()
                 indicador['qtd_regs_ult_atualiz'] = contador
                 get_model().update("Indicadores", indicador, tipoIndice)
 
@@ -342,13 +338,14 @@ def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
     dataFinal = datetime.strftime(dataFinal, "%d/%m/%Y")
     # Montando a API
     urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(codigoIndice,dataInicial,dataFinal)
-    print(urlAPI)
+  
+    logger.info('Chamada à API de índices: {}'.format(urlAPI))
     # Chamando e obtendo a resposta da API
     response = requests.get(urlAPI)
     # Validando o retorno
     if response.status_code == 200:
-        print("Retorno da API: ")
-        print(response.json()) 
+        logger.info('Retorno da API de índices:')
+        logger.info('response: {}'.format(response.json()))
 
     return response.json()
         # Varre o dicionário de índices para aplicar os índices mês a mês 
