@@ -7,11 +7,3 @@ cron:
   retry_parameters:
     min_backoff_seconds: 60
     max_doublings: 5
-- description: "Job TESTE de atualização dos índices referentes aos indicadores cadastrados"
-  url: /api/indice
-  #target: beta
-  schedule: every sunday 21:12
-  timezone: America/Sao_Paulo
-  retry_parameters:
-    min_backoff_seconds: 60
-    max_doublings: 5
