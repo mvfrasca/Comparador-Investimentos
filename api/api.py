@@ -165,6 +165,9 @@ def put_indices():
         # Recupera indices disponíveis do indicador desde a última atualização até hoje 
         indicesAPI = get_indicesAPI(serie,dataUltReferencia,dataAtual)
 
+        # Ordena lista de obtidas da API
+        indicesAPI = sorted(indicesAPI, key = lambda campo: datetime.strptime(campo['data'], "%d/%m/%Y"))
+        
         # Loga os índices retornados pela API
         logger.info("Índices recuperados da API - ")
         logger.info('indicesAPI={}'.format(indicesAPI))
