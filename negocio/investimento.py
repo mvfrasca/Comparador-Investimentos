@@ -5,13 +5,23 @@ from datetime import datetime
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
 
-class Investimento:
-    def __init__(self, valInvestimentoInicial, indexador, taxa, dataInicial, dataFinal):
-        # Define a precisão para 7 casas decimais
+class Investimento(object):
+    """Classe que representa um Investimento.
+    
+    Argumentos:
+        valInvestimentoInicial: valor inicial do investimento
+        indexador: nome identificador do indexador (ex.: ipca, selic)
+        taxa: percentual aplicado sobre o índice (ex.: 130 (130% do cdi), 7 (IPCA + 7%))
+        dataInicial: data inicial do investimento
+        dataFinal (datetime): data de vencimento do investimento
+    """
+    # Método criador 
+    def __init__(self, valInvestimentoInicial: Decimal, indexador: str, taxa: Decimal, dataInicial: datetime, dataFinal: datetime):
+         # Define a precisão para 7 casas decimais
         getcontext().prec = 7
         # Atualiza os atributos com os valores informados na instanciação da classe
         self.valInvestimentoInicial = Decimal(valInvestimentoInicial)
-        self.indexador = indexador
+        self.indexador = indexador.lower()
         self.taxa = Decimal(taxa)
         self.dataInicial = dataInicial
         self.dataFinal = dataFinal
@@ -27,7 +37,13 @@ class Investimento:
         self.evolucao = []
 
     def calcularInvestimento(self):
-
+        """Realiza o cálculo do investimento em função do período informado.
+    
+        Retorno:
+            Retorna uma lista contendo disctionaries referentes aos valores 
+            de saldo e rentabilidade do investimento além de uma sublista 
+            da evolução do valor inicial em função do tempo (período informado)
+        """
         # Inicializa o valor de investimento atualizado onde serão aplicados índices por período
         self.valSaldoBruto = self.valInvestimentoInicial
 
@@ -61,11 +77,15 @@ class Investimento:
 
         # Atualiza resultados do investimento
         self.rentabilidadeBruta = self.valSaldoBruto - self.valInvestimentoInicial
-        
-        # Monta dictionary com o resultado do investimento para retorno do método
+
+        # Monta o dictionary com o resultado do investimento para retorno do método
         resultadoInvestimento.update({'valInvestimentoInicial': float(self.valInvestimentoInicial)})
         resultadoInvestimento.update({'valSaldoBruto': float(self.valSaldoBruto)})
         resultadoInvestimento.update({'rentabilidadeBruta': float(self.rentabilidadeBruta)})
         resultadoInvestimento.update({'evolucao': self.evolucao})
 
+        # for index, item in enumerate(times_ordenados, start=1):
+        #     item['class_gols_pro_mand'] = index 
+
         return resultadoInvestimento
+

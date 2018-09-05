@@ -19,9 +19,9 @@ from utils.helper import _is_date
 from utils.helper import ClientException
 # Importa o módulo de log
 import logging
-# Importa as classes internas
-from investimento import Investimento
-from gestaocadastro import GestaoCadastro
+# Importa as classes de negócio
+from negocio.investimento import Investimento
+from negocio.investimento import GestaoCadastro
 
 # Inicializar configura o objeto para gravação de logs
 logger = logging.getLogger('Gerenciador API')
@@ -114,12 +114,7 @@ def calcularInvestimento():
     
     
 
-    # Testando a conversão para decimal já que o isnumeric e isdecimal não funcionou corretamente
-    try:
-        valInvestimentoInicial = Decimal(valInvestimentoInicial)
-    except InvalidOperation:
-        return "Valor do investimento inválido. Informe um valor numérico (utilize . (ponto) para separação de decimais)" 
-
+    i = Investimento()
     investimento = Investimento(valInvestimentoInicial, indexador, taxa, dataInicial, dataFinal)
     resultadoInvestimento = investimento.calcularInvestimento()
 
@@ -166,11 +161,11 @@ def put_indices():
         indicesAPI = get_indicesAPI(serie,dataUltReferencia,dataAtual)
 
         # Ordena lista de obtidas da API
-        indicesAPI = sorted(indicesAPI, key = lambda campo: datetime.strptime(campo['data'], "%d/%m/%Y"))
-        
+        indicesAPI = sorted(indicesAPI, key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
+
         # Loga os índices retornados pela API
         logger.info("Índices recuperados da API - ")
-        logger.info('indicesAPI={}'.format(indicesAPI))
+        logger.info('indicesAPI = {}'.format(indicesAPI))
 
         # Inicializa coleção e contadores
         indicesConsistir = []
