@@ -14,11 +14,14 @@ from utils.helper import _success
 from utils.helper import _error
 from utils.helper import _variable
 from utils.helper import _clean_attributes
+from utils.helper import _is_number
+from utils.helper import _is_date
+from utils.helper import ClientException
 # Importa o módulo de log
 import logging
 # Importa as classes internas
 from investimento import Investimento
-
+from gestaocadastro import GestaoCadastro
 
 # Inicializar configura o objeto para gravação de logs
 logger = logging.getLogger('Gerenciador API')
@@ -31,12 +34,70 @@ api = Blueprint('api', __name__)
 def calcularInvestimento():
     # Obtém argumentos
     query_parameters = request.args
-    # Resgata o valor do investimento
-    valInvestimentoInicial = query_parameters.get('valor')
-    indexador = query_parameters.get('indexador').lower()
-    taxa = query_parameters.get('taxa').lower()
-    dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
-    dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
+    # Define a precisão da classe Decimal para 7 casas decimais
+    getcontext().prec = 7
+    # --------------------------------------------------------------------- #
+    # Resgata os dados de entrada para cálculo da evolução do investimento
+    # --------------------------------------------------------------------- #
+    # Validação - valor
+    if 'valor' not in query_parameters:
+        message  = _error("Você deve informar o valor inicial do investimento.", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    elif _is_number(query_parameters.get('valor')) == False:
+        message  = _error("O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais.", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    else:
+        valInvestimentoInicial = query_parameters.get('valor')
+    
+    # Validação - indexador
+    if 'indexador' not in query_parameters:
+        message  = _error("Você deve informar o indexador do investimento.", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    elif _is_number(query_parameters.get('valor')) == False:
+        message  = _error("O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais.", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    else:
+        indexador = query_parameters.get('indexador').lower()
+
+    # Validação - taxa
+    if 'taxa' not in query_parameters:
+        message  = _error("Você deve informar a taxa relativa ao indexador do investimento.", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    elif _is_number(query_parameters.get('taxa')) == False:
+        message  = _error("Taxa relativa ao indexador do investimento é inválida. Utilizar ponto ao invés de virgula para casas decimais.", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    else:
+        taxa = query_parameters.get('taxa').lower()
+
+    # Validação - dataInicial
+    if 'dataInicial' not in query_parameters:
+        message  = _error("Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    elif _is_date(query_parameters.get('dataInicial'), '%d/%m/%Y') == False:
+        message  = _error("Data inicial do investimento inválida. Formato esperado: DD/MM/AAAA", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    else:
+        dataInicial = datetime.strptime(query_parameters.get('dataInicial'), "%d/%m/%Y")
+
+    # Validação - dataFinal
+    if 'dataFinal' not in query_parameters:
+        message  = _error("Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    elif _is_date(query_parameters.get('dataFinal'), '%d/%m/%Y') == False:
+        message  = _error("Data final do investimento inválida. Formato esperado: DD/MM/AAAA", 400)
+        logger.error('ClientException: {}'.format(message))
+        raise ClientException(message)
+    else:
+        dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
     
     print("Entrada:")
     print(dataInicial)
@@ -51,8 +112,7 @@ def calcularInvestimento():
     # if not str.isdecimal(val_investimento):
     #     return "Valor do investimento inválido. Informe um valor (utilize . para separação de decimais)" 
     
-    # Define a precisão para 7 casas decimais
-    getcontext().prec = 7
+    
 
     # Testando a conversão para decimal já que o isnumeric e isdecimal não funcionou corretamente
     try:
@@ -70,56 +130,7 @@ def calcularInvestimento():
 def criarIndicadores():
     # if request.method == 'POST':
     #     data = request.form.to_dict(flat=True)
-
-    #     book = get_model().create(data)
-
-    #     return redirect(url_for('.view', id=book['id']))
     
-    # with open('static\json\indicadores.json') as f:
-    #     indicadores = f.buffer().json()
-    #     # indicadores = list(map(lambda x: dict(x.keys(), x.values()), list(f)))
-    # print(indicadores)
-    # get_model().update_multi("Indicadores", indicadores)
-
-    keys = []
-    # Poupança
-    indicador = {}
-    indicador.update({'nome': 'Poupança'})
-    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'mensal'})
-    indicador.update({'serie': '196'})
-    indicador.update({'qtd_regs_ult_atualiz': 0})
-    key = get_model().create('Indicadores', indicador, 'poupanca')
-    keys.append({key})
-    print(indicador)
-    # IPCA
-    indicador = {}
-    indicador.update({'nome': 'IPCA'})
-    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'mensal'})
-    indicador.update({'serie': '433'})
-    indicador.update({'qtd_regs_ult_atualiz': 0})
-    key = get_model().create('Indicadores', indicador, 'ipca')
-    keys.append({key})
-    # CDI
-    indicador = {}
-    indicador.update({'nome': 'CDI'})
-    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'diario'})
-    indicador.update({'serie': '12'})
-    indicador.update({'qtd_regs_ult_atualiz': 0})
-    key = get_model().create('Indicadores', indicador, 'cdi')
-    keys.append({key})
-    # SELIC
-    indicador = {}
-    indicador.update({'nome': 'SELIC'})
-    indicador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-    indicador.update({'periodicidade': 'diario'})
-    indicador.update({'serie': '12'})
-    indicador.update({'qtd_regs_ult_atualiz': 0})
-    key = get_model().create('Indicadores', indicador, 'selic')
-    keys.append({key})
-
     return _success({ 'message': 'Indicadores incluidos com sucesso!' }, 200)
 # [FIM criar_indicadores]
 
