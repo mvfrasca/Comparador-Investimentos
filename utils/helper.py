@@ -68,6 +68,21 @@ def _is_date(obj, mascara):
         pass
     return False
 
+def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
+    """Converte os campos de data de um dictionary em datetime.
+
+    Argumentos:
+        item: item de um dictionary que contem campos data em formato string a serem convertidos 
+        para datetime
+        nomes_e_formatos: dictionary contendo os nomes dos campos data e respectivos formatos a 
+        serem convertidos para datetime. Ex.:
+        {'dt_ult_referencia':'%d/%m/%Y', 'dt_ult_atualiz':'%d/%m/%Y'}
+    """
+    # Varre o dicionário de nomes e formatos
+    for nome, formato in nomes_e_formatos.items():
+        # Converte o campo data para datetime
+        item[nome] = datetime.strptime(item[nome], formato)
+
 # Classe para tipificar exceções causadas pelo cliente
 class ClientException(Exception):
     pass

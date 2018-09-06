@@ -16,9 +16,16 @@
 from flask import current_app
 # Importa o cliente Google Cloud Datasotore
 from google.cloud import datastore
+# Importa classe para Enumeradores
+from enum import Enum
 
 builtin_list = list
 
+class TipoEntidade(Enum):
+    ''' Enum que define os tipos das entidades do banco de dados
+    '''
+    INDEXADORES = 'Indexadores'
+    INDICES = 'Indices'
 
 def init_app(app):
     pass
@@ -27,11 +34,11 @@ def get_client():
     # return datastore.Client(current_app.config['PROJECT_ID'])
     return datastore.Client()
 
-def list_indicadores(dt_referencia=None):
+def list_indexadores(dt_referencia=None):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
-    query = ds.query(kind='Indicadores')
+    query = ds.query(kind=TipoEntidade.INDEXADORES)
     # Inclui filtros da consulta caso passados
     if dt_referencia is not None:
         query.add_filter('dt_ult_referencia','<', dt_referencia)
@@ -45,13 +52,13 @@ def list_indicadores(dt_referencia=None):
     
     return entities
 
-def list_indices(indicador, dataInicial, dataFinal):
+def list_indices(indexador, dataInicial, dataFinal):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
-    query = ds.query(kind='Indices')
+    query = ds.query(kind=TipoEntidade.INDICES)
     # Inclui filtros da consulta
-    query.add_filter('tp_indice','=',indicador)
+    query.add_filter('tp_indice','=',indexador)
     query.add_filter('dt_referencia','>=', dataInicial)
     query.add_filter('dt_referencia','<=', dataFinal)
     #Define ordenação da consulta
@@ -111,21 +118,14 @@ def from_datastore(entity):
 # # [END list]
 
 
-def read(id):
+def read(kind: TipoEntidade, id: str):
     ds = get_client()
-    key = ds.key('Indice', id)
+    key = ds.key(kind, id)
     results = ds.get(key)
     return from_datastore(results)
-
-def read_indicador(id):
-    ds = get_client()
-    key = ds.key('Indicadores', id)
-    results = ds.get(key)
-    return from_datastore(results)
-    #return results
 
 # [START update]
-def update(kind, data, id=None):
+def update(kind: TipoEntidade, data: list, id: str = None):
     ds = get_client()
     if id:
         key = ds.key(kind, id)
@@ -149,14 +149,14 @@ create = update
 # [END update]
 
 
-def delete(id):
+def delete(kind: TipoEntidade, id: str):
     ds = get_client()
-    key = ds.key('Indices', int(id))
+    key = ds.key(kind, id)
     ds.delete(key)
 
 
 # [START update]
-def update_multi(kind, lista):
+def update_multi(kind: TipoEntidade, lista: list):
     ds = get_client()
 
     entities = []

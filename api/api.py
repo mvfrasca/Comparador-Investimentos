@@ -1,5 +1,5 @@
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
-from model import get_model
+from model import get_model, get_tipos_entidades
 # Importa módulos utilizados do framework Flask
 from flask import Blueprint, redirect, render_template, request, url_for, jsonify
 # Importanto módulo para tratamento de números decimais
@@ -21,9 +21,9 @@ from utils.helper import ClientException
 import logging
 # Importa as classes de negócio
 from negocio.investimento import Investimento
-from negocio.investimento import GestaoCadastro
+from negocio.gestaocadastro import GestaoCadastro
 
-# Inicializar configura o objeto para gravação de logs
+# Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Gerenciador API')
 logger.setLevel(logging.INFO)
 
@@ -31,14 +31,16 @@ logger.setLevel(logging.INFO)
 api = Blueprint('api', __name__)
 
 @api.route('/investimento', methods=['GET'])
-def calcularInvestimento():
+def calcular_investimento():
     # Obtém argumentos
     query_parameters = request.args
+    # Loga os estado atual do indexador
+    logger.info("Parâmetros recebidos para cálculo do investimento: {}".format(query_parameters))
     # Define a precisão da classe Decimal para 7 casas decimais
     getcontext().prec = 7
-    # --------------------------------------------------------------------- #
-    # Resgata os dados de entrada para cálculo da evolução do investimento
-    # --------------------------------------------------------------------- #
+    # ------------------------------------------------------------------------------ #
+    # Resgata e valida os dados de entrada para cálculo da evolução do investimento
+    # ------------------------------------------------------------------------------ #
     # Validação - valor
     if 'valor' not in query_parameters:
         message  = _error("Você deve informar o valor inicial do investimento.", 400)
@@ -99,69 +101,57 @@ def calcularInvestimento():
     else:
         dataFinal = datetime.strptime(query_parameters.get('dataFinal'), "%d/%m/%Y")
     
-    print("Entrada:")
-    print(dataInicial)
-    print(dataFinal)
-    
-    #print(query_parameters.get('val_investimento'))
 
-    # Valida se parâmetro do valor do investimento foi informado
-    if not (valInvestimentoInicial):
-        return page_not_found(404)
-    # Valida se parâmetro do valor do investimento é numérico  
-    # if not str.isdecimal(val_investimento):
-    #     return "Valor do investimento inválido. Informe um valor (utilize . para separação de decimais)" 
-    
-    
-
-    i = Investimento()
     investimento = Investimento(valInvestimentoInicial, indexador, taxa, dataInicial, dataFinal)
     resultadoInvestimento = investimento.calcularInvestimento()
 
     return jsonify(resultadoInvestimento)
 
-# [INICIO INDICADOR]
-@api.route('/indicadores', methods=['POST'])
-def criarIndicadores():
+@api.route('/indexadores', methods=['POST'])
+def incluir_indexadores():
+    """Carga inicial das entidades que representarão os indexadores.
+    """
     # if request.method == 'POST':
     #     data = request.form.to_dict(flat=True)
-    
-    return _success({ 'message': 'Indicadores incluidos com sucesso!' }, 200)
-# [FIM criar_indicadores]
+    gc = GestaoCadastro()
+    gs.incluir_indicadores
+    return _success({ 'message': 'Indexadores incluidos com sucesso!' }, 200)
 
-@api.route('/indice', methods=['GET'])
-def put_indices():
-
+@api.route('/indices', methods=['GET'])
+def atualizar_indices():
+    """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 
+    última data de referência importada da API do Banco Central.
+    """
     # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
     # zerados caso contrário datasotore não reconhece)
     dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
     # Inicializa o contador geral de registros atualizados
     contadorTotal = 0
-    # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
-    indicadores = get_model().list_indicadores(dataAtual)
-
-    # Percorre os indicadores para consulta e atualização
-    for indicador in indicadores:
-        # Obtém os dados do indicador
-        serie = indicador['serie']
-        tipoIndice = indicador['id']
-        dataUltReferencia = indicador['dt_ult_referencia']
-        periodicidade = indicador['periodicidade']
+    # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)
+    indexadores = get_model().list_indexadores(dataAtual)
         
-        # Loga os estado atual do indicador
-        logger.info("Indicador a receber atualização de índices - ")
-        logger.info('indicador={}'.format(indicador))
+    # Percorre os indexadores para consulta e atualização
+    for indexador in indexadores:
+        # Obtém os dados do indexador
+        serie = indexador['serie']
+        tipoIndice = indexador['id']
+        dataUltReferencia = indexador['dt_ult_referencia']
+        periodicidade = indexador['periodicidade']
+        
+        # Loga os estado atual do indexador
+        logger.info("Indicador a receber atualização de índices")
+        logger.info('indexador={}'.format(indexador))
  
         # Caso o índicador seja de peridicidade mensal e o mês da última atualização é igual ao 
-        # mês atual pula para o próximo indicador
+        # mês atual pula para o próximo indexador
         if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
             continue     
 
-        # Recupera indices disponíveis do indicador desde a última atualização até hoje 
+        # Recupera indices disponíveis do indexador desde a última atualização até hoje 
         indicesAPI = get_indicesAPI(serie,dataUltReferencia,dataAtual)
 
         # Ordena lista de obtidas da API
-        indicesAPI = sorted(indicesAPI, key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
+        indicesAPI = sorted(indicesAPI, key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
 
         # Loga os índices retornados pela API
         logger.info("Índices recuperados da API - ")
@@ -206,26 +196,30 @@ def put_indices():
             # Caso coleção chegou em 100 itens libera a gravação em lote em banco de dados 
             # para não sobrecarregar chamada à API do banco de dados
             if contadorParcial == 100:
-                get_model().update_multi("Indices", indicesConsistir)
+                tipoEntidade = get_model().TipoEntidade.INDICES
+                get_model().update_multi(tipoEntidade, indicesConsistir)
                 indicesConsistir = []
                 contadorParcial = 0
-                # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
+                # Atualiza a data do último índice armazanado na entidade do indexador correspondente 
                 # para controle de próximas atualizações
-                indicador['dt_ult_referencia'] = dataReferencia
-                indicador['dt_ult_atualiz'] = datetime.now()
-                indicador['qtd_regs_ult_atualiz'] = contador
-                get_model().update("Indicadores", indicador, tipoIndice)
+                indexador['dt_ult_referencia'] = dataReferencia
+                indexador['dt_ult_atualiz'] = datetime.now()
+                indexador['qtd_regs_ult_atualiz'] = contador
+                tipoEntidade = get_model().TipoEntidade.INDEXADORES
+                get_model().update(tipoEntidade, indexador, tipoIndice)
 
         # Realiza a gravação em lote dos índices no banco de dados caso algum registro tenha
         # sido tratado
         if contadorParcial > 0:
-            get_model().update_multi("Indices", indicesConsistir)
-            # Atualiza a data do último índice armazanado na entidade do indicador correspondente 
+            tipoEntidade = get_model().TipoEntidade.INDICES
+            get_model().update_multi(tipoEntidade, indicesConsistir)
+            # Atualiza a data do último índice armazanado na entidade do indexador correspondente 
             # para controle de próximas atualizações
-            indicador['dt_ult_referencia'] = dataReferencia
-            indicador['dt_ult_atualiz'] = datetime.now()
-            indicador['qtd_regs_ult_atualiz'] = contador
-            get_model().update("Indicadores", indicador, tipoIndice)
+            indexador['dt_ult_referencia'] = dataReferencia
+            indexador['dt_ult_atualiz'] = datetime.now()
+            indexador['qtd_regs_ult_atualiz'] = contador
+            tipoEntidade = get_model().TipoEntidade.INDEXADORES
+            get_model().update(tipoEntidade, indexador, tipoIndice)
 
         contadorTotal = contadorTotal + contador
 
@@ -236,7 +230,7 @@ def put_indices():
         msgRetorno = "Índices atualizados com sucesso! Total de {} registro(s) atualizado(s).".format(contadorTotal)
 
     resposta = {'message': msgRetorno}
-    resposta.update({'indicadores': get_model().list_indicadores() })
+    resposta.update({'Indexadores': get_model().list_indexadores() })
 
     return _success(resposta, 200)
 
@@ -274,24 +268,25 @@ def get_indicesAPI(codigoIndice, dataInicial, dataFinal):
         #     raise ClientException('Falha na consulta ao ')    
     except Exception as e:
         logger.error('Exception: {}'.format(e))
-        message  = _error('Erro ao efetuar a integracao com servicos da AWS', 500)
-        # raise ClientException(message)
+        message  = _error('Erro ao tentar acessar a API do Banco Central.', 500)
+        raise ClientException(message)
     else:
         # Retorna JSON dos índices recuperados da API
         return response.json()
 
 
 
-@api.route('/indicadores/all', methods=['GET'])
+@api.route('/indexadores/all', methods=['GET'])
 def list_indicadores():
-    # Obtém a lista de indicadores para atualização (cuja data de última atualização é anterior à data atual)
-    indicadores = get_model().list_indicadores()
+    # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)
+    indexadores = get_model().list_indexadores()
     
-    return jsonify(indicadores)
+    return jsonify(indexadores)
 
-@api.route('/indicador/<id>', methods=['GET'])
+@api.route('/indexador/<id>', methods=['GET'])
 def get_indicador(id):
-    # Obtém od dados do indicador
-    indicador = get_model().read_indicador(id.lower())
+    # Obtém od dados do indexador
+    tipoEntidade = get_model().TipoEntidade.INDEXADORES
+    indexador = get_model().read(tipoEntidade, id.lower())
     
-    return jsonify(indicador)
+    return jsonify(indexador)

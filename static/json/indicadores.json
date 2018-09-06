@@ -2,29 +2,38 @@
     {
         "id": "poupanca",
         "nome": "Poupança",
-        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "dt_ult_referencia": "01/01/1900",
         "periodicidade": "Mensal",
-        "serie": "196"
+        "serie": "196",
+        "qtd_regs_ult_atualiz": 0,
+        "dt_ult_atualiz": "01/01/1900"
     },
     {
         "id": "ipca",
         "nome": "IPCA",
-        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "dt_ult_referencia": "01/01/1900",
         "periodicidade": "Mensal",
-        "serie": "433"
+        "serie": "433",
+        "qtd_regs_ult_atualiz": 0,
+        "dt_ult_atualiz": "01/01/1900"
+
     },
     {
         "id": "cdi",
         "nome": "CDI",
-        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "dt_ult_referencia": "01/01/1900",
         "periodicidade": "Diário",
-        "serie": "12"
+        "serie": "12",
+        "qtd_regs_ult_atualiz": 0,
+        "dt_ult_atualiz": "01/01/1900"
     },
     {
         "id": "selic",
         "nome": "SELIC",
-        "dt_ult_referencia": datetime.datetime(1900, 1, 1, 0, 0),
+        "dt_ult_referencia": "01/01/1900",
         "periodicidade": "Diário",
-        "serie": "11"
+        "serie": "11",
+        "qtd_regs_ult_atualiz": 0,
+        "dt_ult_atualiz": "01/01/1900"
     }
 ]
