@@ -113,10 +113,10 @@ def calcular_investimento():
         raise be
     except Exception as e:
         mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
-        logger.error('API.py - Exception: {}'.format(e))
+        logger.error('Exception: {}'.format(e))
         raise ServerException(mensagem)
-
-    return jsonify(resultadoInvestimento)
+    else:
+        return jsonify(resultadoInvestimento)
 
 @api.route('/indexadores', methods=['POST'])
 def post_indexadores():
@@ -124,34 +124,46 @@ def post_indexadores():
     """
     # if request.method == 'POST':
     #     data = request.form.to_dict(flat=True)
-    
-    # Instancia o a classe de negócio GestaoCadastro
-    objGestaoCadastro = GestaoCadastro()
-    # Realiza a carga inicial dos indexadores
-    objGestaoCadastro.criar_indexadores()
-
-    return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 200)
+    try:
+        # Instancia o a classe de negócio GestaoCadastro
+        objGestaoCadastro = GestaoCadastro()
+        # Realiza a carga inicial dos indexadores
+        objGestaoCadastro.criar_indexadores()
+    except BusinessException as be:
+        raise be
+    except Exception as e:
+        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
+        logger.error('Exception: {}'.format(e))
+        raise ServerException(mensagem)
+    else:
+        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 200)
 
 @api.route('/indices', methods=['GET'])
 def atualizar_indices():
     """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 
     última data de referência importada da API do Banco Central.
     """
-    # Instancia a classe de negócios responsável pela gestão de cadastros da API
-    objGestaoCadastro = GestaoCadastro()
-    # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
-    # zerados caso contrário datasotore não reconhece)
-    dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
-    # Inicializa o contador geral de registros atualizados
-    contadorTotal = 0
-    # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)
-    indexadores = objGestaoCadastro.list_indexadores(dataAtual)
-        
+    try:
+        # Instancia a classe de negócios responsável pela gestão de cadastros da API
+        objGestaoCadastro = GestaoCadastro()
+        # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
+        # zerados caso contrário datasotore não reconhece)
+        dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+        # Inicializa o contador geral de registros atualizados
+        contadorTotal = 0
+        # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)
+        indexadores = objGestaoCadastro.list_indexadores(dataAtual)
+    except BusinessException as be:
+        raise be
+    except Exception as e:
+        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
+        logger.error('Exception: {}'.format(e))
+        raise ServerException(mensagem)
+
     # Percorre os indexadores para consulta e atualização
     for indexador in indexadores:
         # Loga os estado atual do indexador
-        logger.info("Indicador a receber atualização de índices")
-        logger.info('indexador={}'.format(indexador))
+        logger.info('Indexador a receber atualização de índices: {}'.format(indexador))
         # Obtém os dados do indexador
         serie = indexador['serie']
         tipoIndice = indexador['id']
@@ -176,6 +188,7 @@ def atualizar_indices():
         indicesConsistir = []
         contadorParcial = 0
         contador = 0
+        
 
         # Varre a lista de índices retornadas pela API
         for indiceAPI in indicesAPI:

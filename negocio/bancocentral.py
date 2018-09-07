@@ -2,22 +2,13 @@
 from decimal import Decimal, getcontext
 # Importa módulo para tratamento de data/hora
 from datetime import datetime
-# Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
-from model import get_model
 # Importando classes para tratamento de Json e requests HTTP
 import json, requests
 # Importa o módulo Helper
 import utils.helper
-from utils.helper import _converter_datas_dict
-# Importa o módulo Helper
-import utils.helper
-from utils.helper import _success
-from utils.helper import _error
-from utils.helper import _variable
-from utils.helper import _clean_attributes
 from utils.helper import _is_number
 from utils.helper import _is_date
-from utils.helper import InputException
+from utils.helper import ServerException
 # Importa o módulo de log
 import logging
 
@@ -31,7 +22,7 @@ class BancoCentral(object):
     def __init__(self):
        self.__init__()
     
-    def get_indices(self, serie: str, dataInicial: datetime, dataFinal: datetime):
+    def list_indices(self, serie: str, dataInicial: datetime, dataFinal: datetime):
         """Acessa a API do Banco Central e retorna os índices referentes à série e período informados.
 
         Argumentos:
@@ -67,7 +58,6 @@ class BancoCentral(object):
         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.192/dados?formato=json&dataInicial=01/08/2016&dataFinal=26/08/2018
         # Poupança (Mensal)
         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.196/dados?formato=json&dataInicial=01/01/2018&dataFinal=26/08/2018
-
         try:
             # Formatando datas com o formato string esperado pela API
             dataInicial = datetime.strftime(dataInicial, "%d/%m/%Y")
@@ -79,16 +69,15 @@ class BancoCentral(object):
             response = requests.get(urlAPI)
             # Validando o retorno
             if response.status_code == 200:
-                logger.info('Retorno da API de índices:')
-                logger.info('response: {}'.format(response.json()))
+                logger.info('Retorno da API de índices: {}'.format(response.json()))
             else:
-                message = response. ce.response['Error']['Message']
-                code = ce.response['ResponseMetadata']['HTTPStatusCode']
-                raise InputException('Falha na consulta ao ')    
+                logger.info('Erro no retorno da API do Banco Central: {}'.format(response))
+                raise ServerException(response)    
         except Exception as e:
-            logger.error('Exception: {}'.format(e))
-            message  = _error('Erro ao tentar acessar a API do Banco Central.', 500)
-            raise InputException(message)
+            raise ServerException(e)
         else:
+            # TODO: Tratar campos retornados para os tipos de dados adequados
+            # Ordena lista de obtidas da API
+            indices = sorted(response.json(), key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
             # Retorna JSON dos índices recuperados da API
-            return response.json()
+            return indices
