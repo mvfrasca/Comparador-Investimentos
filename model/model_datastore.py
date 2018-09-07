@@ -65,7 +65,8 @@ def list_indices(indexador, dataInicial, dataFinal):
     query.order = ['dt_referencia']
     # Executa a consulta e armazena num dictionary 
     indices = list(query.fetch())
-
+    # TODO: Veificar se é necessário utilizar o método from_datastore()
+    print(indices)
     return indices
 
 
@@ -80,15 +81,13 @@ def list_indices(indexador, dataInicial, dataFinal):
 #     # Insere o novo índice
 #     datastore_client.put(indice)
 
-# [START from_datastore]
 def from_datastore(entity):
-    """Translates Datastore results into the format expected by the
-    application.
-
-    Datastore typically returns:
+    """Converte os resultados do Google Datastore no formato esperado (dictionary).
+    Exemplo:
+    Datastore tipicamente retorna:
         [Entity{key: (kind, id), prop: val, ...}]
 
-    This returns:
+    Este método retornará:
         {id: id, prop: val, ...}
     """
     if not entity:
@@ -98,25 +97,6 @@ def from_datastore(entity):
 
     entity['id'] = entity.key.name
     return entity
-# [END from_datastore]
-
-
-# [START list]
-# def list(limit=10, cursor=None):
-#     ds = get_client()
-
-#     query = ds.query(kind='Book', order=['title'])
-#     query_iterator = query.fetch(limit=limit, start_cursor=cursor)
-#     page = next(query_iterator.pages)
-
-#     entities = builtin_list(map(from_datastore, page))
-#     next_cursor = (
-#         query_iterator.next_page_token.decode('utf-8')
-#         if query_iterator.next_page_token else None)
-
-#     return entities, next_cursor
-# # [END list]
-
 
 def read(kind: TipoEntidade, id: str):
     ds = get_client()
@@ -170,3 +150,19 @@ def update_multi(kind: TipoEntidade, lista: list):
     
     #return from_datastore(entity)
     return
+
+
+# Lista com paginação
+# def list(limit=10, cursor=None):
+#     ds = get_client()
+
+#     query = ds.query(kind='Book', order=['title'])
+#     query_iterator = query.fetch(limit=limit, start_cursor=cursor)
+#     page = next(query_iterator.pages)
+
+#     entities = builtin_list(map(from_datastore, page))
+#     next_cursor = (
+#         query_iterator.next_page_token.decode('utf-8')
+#         if query_iterator.next_page_token else None)
+
+#     return entities, next_cursor

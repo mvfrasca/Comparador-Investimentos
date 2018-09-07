@@ -6,20 +6,32 @@ from datetime import datetime
 
 # Get variavel de ambiente
 def _variable(name):
+    """Recupera variável de ambiente.
+
+    Argumentos:
+        name: Nome da variável de ambiente.
+    Retorno:
+        Valor da variável de ambiente.
+    """
     try:
         name = os.environ[name]
         return name
     except KeyError:
         message  = _error("Variable does not exist.", 500)
-
         raise Exception(message)
-
 
     return os.environ[name]
 
 # Tratamento da mensagem de retorno com error
 def _error(message, code):
+    """Formata a mensagem de retorno HTTP de erro para formato padrão.
 
+    Argumentos:
+        message: mensagem de erro
+        code: código HTTP DE retorno
+    Retorno:
+        Json com mensagem de retorno formatada.
+    """
     response =  {
         'statusCode': code,
         'body': { 'Message': message },
@@ -31,6 +43,14 @@ def _error(message, code):
 
 # Tratamento da mensagem de retorno com sucesso
 def _success(message, code):
+    """Formata a mensagem de retorno HTTP de sucesso para formato padrão.
+
+    Argumentos:
+        message: mensagem de sucesso
+        code: código HTTP DE retorno
+    Retorno:
+        Json com mensagem de retorno formatada.
+    """
     response =  {
         'statusCode': code,
         'body': message,
@@ -42,15 +62,25 @@ def _success(message, code):
 
 # Limpar atributos vazios
 def _clean_attributes(data):
-   data_clean = dict((k, v) for k, v in data.items() if v)
-   return data_clean
+    """Limpa atributos vazios.
 
-# convert date to json
-def _date_handler(obj):
-    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
-
-# Valida se string contém um número inteiro ou decimal
+    Argumentos:
+        data: objeto que contém uma lista de valores.
+    Retorno:
+        Objeto data sem os atributos vazios. 
+    """
+    data_clean = dict((k, v) for k, v in data.items() if v)
+    return data_clean
+ 
 def _is_number(obj):
+    """Valida se o objeto contém um número inteiro ou decimal.
+
+    Argumentos:
+        obj: objeto a ser validado.
+    Retorno:
+        True: se conter um número inteiro ou decimal.
+        False: se não conter um número.
+    """
     try:
         float(obj)
         return True
@@ -60,7 +90,16 @@ def _is_number(obj):
 
 # Valida se string contém um número inteiro ou decimal
 # "%d/%m/%Y"
-def _is_date(obj, mascara):
+def _is_date(obj, mascara: str):
+    """Valida se o objeto informado é uma data ou data/hora válida.
+
+    Argumentos:
+        obj: objeto a ser validado. Ex.: '01/01/2018'
+        mascara: máscara de data/hora do objeto. Ex.: '%d/%m/%Y'
+    Retorno:
+        True: se for uma data ou data/hora válida.
+        False: se for inválida.
+    """
     try:
         datetime.strptime(obj, mascara)
         return True
@@ -83,6 +122,33 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
         # Converte o campo data para datetime
         item[nome] = datetime.strptime(item[nome], formato)
 
-# Classe para tipificar exceções causadas pelo cliente
-class ClientException(Exception):
+class InputException(Exception):
+    """Exceção disparada nos casos argumentos de entrada inválidos.
+
+    Argumentos:
+        expression: atributo inválido em que ocorreu o erro
+        message: mensagem detalhando o motivo do erro
+    """
+    def __init__(self, atributo, mensagem):
+        self.atributo = atributo
+        self.mensagem = mensagem
+    
+    pass
+    
+class BusinessException(Exception):
+    """Exceção disparada nos casos em que ocorre erros de validação de regras de negócio.
+
+    Argumentos:
+        codigo: código do erro de validação de regra de negócio
+        mensagem: mensagem detalhando o motivo do erro
+    """
+    def __init__(self, codigo, mensagem):
+        self.codigo = codigo
+        self.mensagem = mensagem
+
+    pass
+
+class ServerException(Exception):
+    """Exceção disparada nos casos em que ocorre erros internos na API e tratados de forma amigável ao lado cliente.
+    """
     pass

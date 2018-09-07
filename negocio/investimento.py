@@ -36,7 +36,7 @@ class Investimento(object):
         self.valSaldoLiquido = Decimal(0)
         self.evolucao = []
 
-    def calcularInvestimento(self):
+    def calcular_investimento(self):
         """Realiza o cálculo do investimento em função do período informado.
     
         Retorno:
