@@ -265,11 +265,12 @@ def list_indexadores():
     except Exception as e:
         mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
         logger.error('Exception: {}'.format(e))
+        print(e)
         raise ServerException(mensagem)
 
     return jsonify(indexadores)
 
-@api.route('/indexador/<id>', methods=['GET'])
+@api.route('/indexadores/<id>', methods=['GET'])
 def get_indexador(id):
     """Retorna lista com todos o indexador solicitado
     """

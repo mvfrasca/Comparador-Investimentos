@@ -12,7 +12,7 @@ from utils.helper import _converter_datas_dict
 # Importa o módulo de log
 import logging
 # Importa a classe base
-from baseobject import BaseObject
+from negocio.baseobject import BaseObject
 
 # Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Classe GestaoCadastro')

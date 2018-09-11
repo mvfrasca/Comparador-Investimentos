@@ -5,7 +5,7 @@ from datetime import datetime
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
 # Importa a classe base
-from baseobject import BaseObject
+from negocio.baseobject import BaseObject
 
 class Investimento(BaseObject):
     """Classe que representa um Investimento.
