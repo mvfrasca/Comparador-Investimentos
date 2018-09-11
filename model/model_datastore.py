@@ -38,7 +38,7 @@ def list_indexadores(dt_referencia=None):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
-    query = ds.query(kind=TipoEntidade.INDEXADORES)
+    query = ds.query(kind=TipoEntidade.INDEXADORES.value)
     # Inclui filtros da consulta caso passados
     if dt_referencia is not None:
         query.add_filter('dt_ult_referencia','<', dt_referencia)
@@ -56,7 +56,7 @@ def list_indices(indexador, dataInicial, dataFinal):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
-    query = ds.query(kind=TipoEntidade.INDICES)
+    query = ds.query(kind=TipoEntidade.INDICES.value)
     # Inclui filtros da consulta
     query.add_filter('tp_indice','=',indexador)
     query.add_filter('dt_referencia','>=', dataInicial)
@@ -100,7 +100,7 @@ def from_datastore(entity):
 
 def read(kind: TipoEntidade, id: str):
     ds = get_client()
-    key = ds.key(kind, id)
+    key = ds.key(kind.value, id)
     results = ds.get(key)
     return from_datastore(results)
 
@@ -108,9 +108,9 @@ def read(kind: TipoEntidade, id: str):
 def update(kind: TipoEntidade, data: list, id: str = None):
     ds = get_client()
     if id:
-        key = ds.key(kind, id)
+        key = ds.key(kind.value, id)
     else:
-        key = ds.key(kind)
+        key = ds.key(kind.value)
 
     # entity = datastore.Entity(
     #     key=key) ,
@@ -131,7 +131,7 @@ create = update
 
 def delete(kind: TipoEntidade, id: str):
     ds = get_client()
-    key = ds.key(kind, id)
+    key = ds.key(kind.value, id)
     ds.delete(key)
 
 
@@ -141,7 +141,7 @@ def update_multi(kind: TipoEntidade, lista: list):
 
     entities = []
     for item in lista:
-        key = ds.key(kind, item['id'])
+        key = ds.key(kind.value, item['id'])
         entity = datastore.Entity(key=key)
         entity.update(item)
         entities.append(entity)

@@ -11,12 +11,14 @@ from utils.helper import _is_date
 from utils.helper import ServerException
 # Importa o módulo de log
 import logging
+# Importa a classe base
+from baseobject import BaseObject
 
 # Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Classe BancoCentral')
 logger.setLevel(logging.INFO)
 
-class BancoCentral(object):
+class BancoCentral(BaseObject):
     """Classe que representa a entidade Banco Central e dispobiliza os métodos para consulta de índices via APIs do Banco Central.
     """
     def __init__(self):
@@ -72,12 +74,14 @@ class BancoCentral(object):
                 logger.info('Retorno da API de índices: {}'.format(response.json()))
             else:
                 logger.info('Erro no retorno da API do Banco Central: {}'.format(response))
-                raise ServerException(response)    
-        except Exception as e:
-            raise ServerException(e)
-        else:
+                raise ServerException(response)
+            
             # TODO: Tratar campos retornados para os tipos de dados adequados
             # Ordena lista de obtidas da API
             indices = sorted(response.json(), key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
+
+        except Exception as e:
+            raise ServerException(e)
+        else:
             # Retorna JSON dos índices recuperados da API
             return indices

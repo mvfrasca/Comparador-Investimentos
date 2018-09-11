@@ -11,12 +11,14 @@ import utils.helper
 from utils.helper import _converter_datas_dict
 # Importa o módulo de log
 import logging
+# Importa a classe base
+from baseobject import BaseObject
 
 # Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Classe GestaoCadastro')
 logger.setLevel(logging.INFO)
 
-class GestaoCadastro(object):
+class GestaoCadastro(BaseObject):
     """Classe que gerencia os cadastros que dão suporte aos cálculos de investimento.
     """
     def __init__(self):
@@ -91,6 +93,17 @@ class GestaoCadastro(object):
         """
         # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à dt_referencia)
         return get_model().list_indexadores(dataReferencia)
+        # TODO: Avaliar para transformar em lista de objetos indexador
+
+    def get_indexador(self, id: str):
+        """Retorna o indexador de acordo com o id solicitado
+
+        Argumentos:
+            - id: código identificador do indexador. Ex.: ipca, cdi, poupanca.
+        """
+        # Obtém os dados do indexador solicitado
+        tipoEntidade = get_model().TipoEntidade.INDEXADORES
+        return get_model().read(tipoEntidade, id.lower())
 
     def atualizar_indices(self):
         """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 
