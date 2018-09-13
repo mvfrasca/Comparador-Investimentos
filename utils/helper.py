@@ -23,7 +23,7 @@ def _variable(name):
     return os.environ[name]
 
 # Tratamento da mensagem de retorno com error
-def _error(message, code):
+def _error(body, statusCode):
     """Formata a mensagem de retorno HTTP de erro para formato padrão.
 
     Argumentos:
@@ -32,9 +32,9 @@ def _error(message, code):
     Retorno:
         Json com mensagem de retorno formatada.
     """
-    response =  {
-        'statusCode': code,
-        'body': { 'Message': message },
+    response = {
+        'statusCode': statusCode,
+        'body': body,
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -42,7 +42,7 @@ def _error(message, code):
     return jsonify(response)
 
 # Tratamento da mensagem de retorno com sucesso
-def _success(message, code):
+def _success(body, statusCode):
     """Formata a mensagem de retorno HTTP de sucesso para formato padrão.
 
     Argumentos:
@@ -52,8 +52,8 @@ def _success(message, code):
         Json com mensagem de retorno formatada.
     """
     response =  {
-        'statusCode': code,
-        'body': message,
+        'statusCode': statusCode,
+        'body': body,
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -113,14 +113,18 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
     Argumentos:
         item: item de um dictionary que contem campos data em formato string a serem convertidos 
         para datetime
-        nomes_e_formatos: dictionary contendo os nomes dos campos data e respectivos formatos a 
+        nomes_e_formatos: dictionary contendo os nomes dos nomes dos atributos de data e respectivos formatos a 
         serem convertidos para datetime. Ex.:
         {'dt_ult_referencia':'%d/%m/%Y', 'dt_ult_atualiz':'%d/%m/%Y'}
+    Retorno:
+        item com as datas convertidas.
     """
     # Varre o dicionário de nomes e formatos
-    for nome, formato in nomes_e_formatos.items():
+    for atributo, formato in nomes_e_formatos.items():
         # Converte o campo data para datetime
-        item[nome] = datetime.strptime(item[nome], formato)
+        item[atributo] = datetime.strptime(item[atributo], formato)
+
+    return item
 
 class InputException(Exception):
     """Exceção disparada nos casos argumentos de entrada inválidos.
@@ -142,7 +146,7 @@ class BusinessException(Exception):
         codigo: código do erro de validação de regra de negócio
         mensagem: mensagem detalhando o motivo do erro
     """
-    def __init__(self, codigo, mensagem):
+    def __init__(self, codigo:str, mensagem:str):
         self.codigo = codigo
         self.mensagem = mensagem
 
@@ -150,5 +154,13 @@ class BusinessException(Exception):
 
 class ServerException(Exception):
     """Exceção disparada nos casos em que ocorre erros internos na API e tratados de forma amigável ao lado cliente.
+    
+    Argumentos:
+        mensagem: mensagem detalhando o motivo do erro. Quando não informada define mensagem padrão.
     """
+    def __init__(self, mensagem:str = None):
+        if mensagem is None:
+            self.mensagem = "Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde."
+        else:
+            self.mensagem = mensagem
     pass

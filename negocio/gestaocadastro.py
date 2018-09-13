@@ -22,7 +22,7 @@ class GestaoCadastro(BaseObject):
     """Classe que gerencia os cadastros que dão suporte aos cálculos de investimento.
     """
     def __init__(self):
-       self.__init__()
+       pass
     
     def criar_indexadores(self):
         """Realiza a carga inicial das entidades que representarão os indexadores.
@@ -37,13 +37,15 @@ class GestaoCadastro(BaseObject):
             # Prepara o dicionário com os nomes dos campos data e respectivo formato no json
             # para que a função _converter_datas_dict realize a conversão para datetime
             datas_converter = {'dt_ult_referencia':'%d/%m/%Y', 'dt_ult_atualiz':'%d/%m/%Y'}
-            indexadores = map(lambda item: _converter_datas_dict(item, datas_converter), indexadores)
+            indexadores = list(map(lambda item: _converter_datas_dict(item, datas_converter), indexadores))
             # Loga os estado atual do indicador
             logger.info("Carga inicial de indexadores")
             logger.info('indexadores = {}'.format(indexadores))
             # Inclui/atualiza a base de dados com os indexadores
-            get_model().update_multi("Indexadores", indexadores)
+            tipoEntidade = get_model().TipoEntidade.INDEXADORES
+            get_model().update_multi(tipoEntidade, indexadores)
 
+        return
         # keys = []
         # # Poupança
         # indexador = {}

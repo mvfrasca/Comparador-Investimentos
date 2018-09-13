@@ -22,7 +22,7 @@ class BancoCentral(BaseObject):
     """Classe que representa a entidade Banco Central e dispobiliza os métodos para consulta de índices via APIs do Banco Central.
     """
     def __init__(self):
-       self.__init__()
+       pass
     
     def list_indices(self, serie: str, dataInicial: datetime, dataFinal: datetime):
         """Acessa a API do Banco Central e retorna os índices referentes à série e período informados.

@@ -138,7 +138,6 @@ def delete(kind: TipoEntidade, id: str):
 # [START update]
 def update_multi(kind: TipoEntidade, lista: list):
     ds = get_client()
-
     entities = []
     for item in lista:
         key = ds.key(kind.value, item['id'])

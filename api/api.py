@@ -48,60 +48,50 @@ def calcular_investimento():
     # ------------------------------------------------------------------------------ #
     # Validação - valor
     if 'valor' not in queryParameters:
-        mensagem  = _error("Você deve informar o valor inicial do investimento.", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Você deve informar o valor inicial do investimento."
         raise InputException('valor', mensagem)
     elif _is_number(queryParameters.get('valor')) == False:
-        mensagem  = _error("O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais.", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais."
         raise InputException('valor', mensagem)
     else:
         valInvestimentoInicial = Decimal(queryParameters.get('valor'))
     
     # Validação - indexador
     if 'indexador' not in queryParameters:
-        mensagem  = _error("Você deve informar o indexador do investimento.", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Você deve informar o indexador do investimento."
         raise InputException('indexador', mensagem)
     elif _is_number(queryParameters.get('valor')) == False:
-        mensagem  = _error("O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais.", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais."
         raise InputException('indexador', mensagem)
     else:
         indexador = queryParameters.get('indexador').lower()
 
     # Validação - taxa
     if 'taxa' not in queryParameters:
-        mensagem  = _error("Você deve informar a taxa relativa ao indexador do investimento.", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Você deve informar a taxa relativa ao indexador do investimento."
         raise InputException('taxa', mensagem)
     elif _is_number(queryParameters.get('taxa')) == False:
-        mensagem  = _error("Taxa relativa ao indexador do investimento é inválida. Utilizar ponto ao invés de virgula para casas decimais.", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Taxa relativa ao indexador do investimento é inválida. Utilizar ponto ao invés de virgula para casas decimais."
         raise InputException('taxa', mensagem)
     else:
         taxa = Decimal(queryParameters.get('taxa'))
 
     # Validação - dataInicial
     if 'dataInicial' not in queryParameters:
-        mensagem  = _error("Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA"
         raise InputException('dataInicial', mensagem)
     elif _is_date(queryParameters.get('dataInicial'), '%d/%m/%Y') == False:
-        mensagem  = _error("Data inicial do investimento inválida. Formato esperado: DD/MM/AAAA", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Data inicial do investimento inválida. Formato esperado: DD/MM/AAAA"
         raise InputException('dataInicial', mensagem)
     else:
         dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%d/%m/%Y")
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
-        mensagem  = _error("Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
     elif _is_date(queryParameters.get('dataFinal'), '%d/%m/%Y') == False:
-        mensagem  = _error("Data final do investimento inválida. Formato esperado: DD/MM/AAAA", 400)
-        logger.error('InputException: {}'.format(mensagem))
+        mensagem  = "Data final do investimento inválida. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
     else:
         dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%d/%m/%Y")
@@ -114,13 +104,11 @@ def calcular_investimento():
     except BusinessException as be:
         raise be
     except Exception as e:
-        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
-        logger.error('Exception: {}'.format(e))
-        raise ServerException(mensagem)
+        raise ServerException()
     else:
-        return jsonify(resultadoInvestimento)
+        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!', 'resultadoInvestimento': jsonify(resultadoInvestimento) }, 201), 201
 
-@api.route('/indexadores', methods=['POST'])
+@api.route('/indexadores', methods=['GET'])
 def post_indexadores():
     """Carga inicial das entidades que representarão os indexadores.
     """
@@ -134,20 +122,19 @@ def post_indexadores():
     except BusinessException as be:
         raise be
     except Exception as e:
-        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
-        logger.error('Exception: {}'.format(e))
-        raise ServerException(mensagem)
+        raise ServerException()
     else:
-        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 200)
+        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201
 
 @api.route('/indices', methods=['GET'])
 def atualizar_indices():
     """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 
     última data de referência importada da API do Banco Central.
     """
+    # Instancia a classe de negócios responsável pela gestão de cadastros da API
+    objGestaoCadastro = GestaoCadastro()
+
     try:
-        # Instancia a classe de negócios responsável pela gestão de cadastros da API
-        objGestaoCadastro = GestaoCadastro()
         # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
         # zerados caso contrário datasotore não reconhece)
         dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
@@ -158,9 +145,7 @@ def atualizar_indices():
     except BusinessException as be:
         raise be
     except Exception as e:
-        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
-        logger.error('Exception: {}'.format(e))
-        raise ServerException(mensagem)
+        raise ServerException()
 
     # Percorre os indexadores para consulta e atualização
     for indexador in indexadores:
@@ -247,9 +232,8 @@ def atualizar_indices():
         msgRetorno = "Índices atualizados com sucesso! Total de {} registro(s) atualizado(s).".format(contadorTotal)
 
     resposta = {'mensagem': msgRetorno}
-    resposta.update({'Indexadores': get_model().list_indexadores() })
-
-    return _success(resposta, statusCode)
+    resposta.update({'Indexadores': objGestaoCadastro.list_indexadores()})
+    return _success(resposta, statusCode), statusCode
 
 @api.route('/indexadores/all', methods=['GET'])
 def list_indexadores():
@@ -263,12 +247,11 @@ def list_indexadores():
     except BusinessException as be:
         raise be
     except Exception as e:
-        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
-        logger.error('Exception: {}'.format(e))
-        print(e)
-        raise ServerException(mensagem)
-
-    return jsonify(indexadores)
+        raise ServerException()
+    else:
+        resposta = {'mensagem': 'Consulta aos indexadores realizada com sucesso'}
+        resposta.update({'Indexadores': jsonify(indexadores)})
+        return _success(resposta, 200), 200
 
 @api.route('/indexadores/<id>', methods=['GET'])
 def get_indexador(id):
@@ -282,8 +265,8 @@ def get_indexador(id):
     except BusinessException as be:
         raise be
     except Exception as e:
-        mensagem  = _error("Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde.", 500)
-        logger.error('Exception: {}'.format(e))
-        raise ServerException(mensagem)
-        
-    return jsonify(indexador)
+        raise ServerException()
+    else:  
+        resposta = {'mensagem': 'Consulta ao indexador realizada com sucesso'}
+        resposta.update({'Indexador': jsonify(indexador) })
+        return _success(resposta, 200), 200

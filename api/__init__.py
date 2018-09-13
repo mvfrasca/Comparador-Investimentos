@@ -13,8 +13,15 @@
 # limitations under the License.
 
 import logging
+import traceback
 from model import get_model
 from flask import current_app, Flask, redirect, url_for
+# Importa o módulo Helper
+import utils.helper
+from utils.helper import _error
+from utils.helper import InputException
+from utils.helper import BusinessException
+from utils.helper import ServerException
 
 def create_app(config, debug=False, testing=False, config_overrides=None):
     app = Flask(__name__)
@@ -28,7 +35,10 @@ def create_app(config, debug=False, testing=False, config_overrides=None):
 
     # Configure logging
     if not app.testing:
+        # Inicializa o objeto para gravação de logs
         logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger('Controller API')
+        logger.setLevel(logging.INFO)
 
     # Setup the data model.
     with app.app_context():
@@ -48,19 +58,38 @@ def create_app(config, debug=False, testing=False, config_overrides=None):
     # Tratamento de erro para recurso não encontrado
     @app.errorhandler(404)
     def page_not_found(e):
-        return """
-        <h1>404</h1><p>O recurso requisitado não foi encontrado: <pre>{}</pre>
-        Veja o log completo de rastreamento.</p>
-        """.format(e), 404
+        logger.error(traceback.format_exc(limit=5))
+        mensagem = "O recurso requisitado não foi encontrado."
+        resposta = {'ServerException': {'mensagem': mensagem}}
+        return _error(resposta, 404), 404
 
-    # Add an error handler. This is useful for debugging the live application,
-    # however, you should disable the output of the exception for production
-    # applications.
+    # Tratamento de erros para erro interno do servidor
     @app.errorhandler(500)
     def server_error(e):
-        return """
-        <h1>500</h1><p>Ocorreu um erro interno: <pre>{}</pre>
-        Veja o log completo de rastreamento.</p>
-        """.format(e), 500
+        logger.error(traceback.format_exc(limit=5))
+        mensagem = "Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde."
+        resposta = {'ServerException': {'mensagem': mensagem}}
+        return _error(resposta, 500), 500
+    
+    # Tratamento de erros para erros internos tratados 
+    @app.errorhandler(ServerException)
+    def server_exception(e):
+        logger.error(traceback.format_exc(limit=5))   
+        resposta = {'ServerException': {'mensagem': e.mensagem}}
+        return _error(resposta, 500), 500
+
+    # Tratamento de erros gerados por dados de entrada incorretos ou incompletos  
+    @app.errorhandler(InputException)
+    def input_exception(e):
+        logger.error(traceback.format_exc(limit=5))
+        resposta = {'InputException': {'atributo': e.campo, 'mensagem': e.mensagem}}
+        return _error(resposta, 400), 400
+
+    # Tratamento de erros gerados por dados de entrada incorretos ou incompletos  
+    @app.errorhandler(BusinessException)
+    def business_exception(e):
+        logger.error(traceback.format_exc(limit=5))
+        resposta = {'BusinessException': {'codigo': e.atributo, 'mensagem': e.mensagem}}
+        return _error(resposta, 400), 400
 
     return app

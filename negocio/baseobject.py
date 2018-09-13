@@ -2,7 +2,7 @@ class BaseObject(object):
     """Classe base com alguns métodos padrão para dar suporte as integrações com o banco de dados.
     """
     def __init__(self):
-       self.__init__()
+       pass
     
     # Datastore chama essa função pra buscar o conteúdo do argumento
     def __getitem__(self, key):
