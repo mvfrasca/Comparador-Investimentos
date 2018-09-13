@@ -38,3 +38,8 @@ class Indice(BaseObject):
         self.dt_referencia = dt_referencia
         self.val_indice = val_indice
         self.dt_inclusao = dt_inclusao
+
+    @classmethod
+    def fromDict(lista:dict):
+        indice = Indice(tp_indice = lista['tp_indice'], dt_referencia = lista['dt_referencia'], val_indice = lista['val_indice'], dt_inclusao = lista['dt_inclusao'])
+

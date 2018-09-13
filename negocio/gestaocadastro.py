@@ -9,10 +9,16 @@ import json
 # Importa o módulo Helper
 import utils.helper
 from utils.helper import _converter_datas_dict
+from utils.helper import InputException
+from utils.helper import BusinessException
+from utils.helper import ServerException
 # Importa o módulo de log
 import logging
 # Importa a classe base
 from negocio.baseobject import BaseObject
+# Importa outras classes de negócio
+from negocio.bancocentral import BancoCentral
+from negocio.indice import Indice
 
 # Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Classe GestaoCadastro')
@@ -111,68 +117,58 @@ class GestaoCadastro(BaseObject):
         """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 
         última data de referência importada da API do Banco Central.
         """
-        # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
-        # zerados caso contrário datasotore não reconhece)
-        dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
-        # Inicializa o contador geral de registros atualizados
-        contadorTotal = 0
-        
-            
+        try:
+            # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
+            # zerados caso contrário datasotore não reconhece)
+            dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+            # Inicializa o contador geral de registros atualizados
+            contadorTotal = 0
+            # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)
+            indexadores = self.list_indexadores(dataAtual)
+            # TODO: Converter para lista de objetos Indexador
+        except BusinessException as be:
+            raise be
+        except Exception as e:
+            raise ServerException(e)
+
         # Percorre os indexadores para consulta e atualização
         for indexador in indexadores:
+            # Loga os estado atual do indexador
+            logger.info('Indexador a receber atualização de índices: {}'.format(indexador))
             # Obtém os dados do indexador
             serie = indexador['serie']
             tipoIndice = indexador['id']
             dataUltReferencia = indexador['dt_ult_referencia']
             periodicidade = indexador['periodicidade']
-            
-            # Loga os estado atual do indexador
-            logger.info("Indicador a receber atualização de índices")
-            logger.info('indexador={}'.format(indexador))
-    
             # Caso o índicador seja de peridicidade mensal e o mês da última atualização é igual ao 
             # mês atual pula para o próximo indexador
             if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
-                continue     
-
+                # Pula para o próximo indexador
+                continue
+            # Instancia a classe de negócios responsável pela consulta à API do Banco Central
+            objBC = BancoCentral()
             # Recupera indices disponíveis do indexador desde a última atualização até hoje 
-            indicesAPI = get_indicesAPI(serie,dataUltReferencia,dataAtual)
-
-            # Ordena lista de obtidas da API
-            indicesAPI = sorted(indicesAPI, key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
-
-            # Loga os índices retornados pela API
-            logger.info("Índices recuperados da API - ")
-            logger.info('indicesAPI = {}'.format(indicesAPI))
+            indicesAPI = objBC.list_indices(serie,dataUltReferencia,dataAtual)
 
             # Inicializa coleção e contadores
             indicesConsistir = []
             contadorParcial = 0
             contador = 0
-
+            
             # Varre a lista de índices retornadas pela API
             for indiceAPI in indicesAPI:
-                
-                logger.info("Índice a ser atualizado: {}".format(tipoIndice))
-                logger.info('indiceAPI={}'.format(indiceAPI))
+                logger.info('Índice a ser atualizado: {0}, dados: {1}'.format(tipoIndice, indiceAPI))
                 # Recupera as propriedades do índice (data e valor)
                 dataReferencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
                 valorIndice = float(indiceAPI['valor'])
-
-                # Verifica se o índice anterior à data do último índice atualizado 
+                # Verifica se data de referência do índice é anterior à data da última atualização 
                 # e caso positivo pula para o próximo (API do BC retornar sempre um dia pra tras)]
                 if (dataReferencia.isocalendar() <= dataUltReferencia.isocalendar()):
-                    logger.info('Índice descartado por ser anterior à última atualização')
+                    logger.info('Índice descartado por ser anterior a última atualização')
                     continue
-
-                id = tipoIndice + '-' + datetime.strftime(dataReferencia, "%Y%m%d")
-                # Popula a estrutura de índice a ser consistida
-                indice = {}
-                indice.update({'id': id})
-                indice.update({'tp_indice': tipoIndice })
-                indice.update({'dt_referencia': dataReferencia})
-                indice.update({'val_indice': valorIndice})
-                indice.update({'dt_inclusao': datetime.now()})
+        
+                # Popula uma instancia de índice a ser consistida
+                indice = Indice(tp_indice = tipoIndice, dt_referencia = dataReferencia, val_indice = valorIndice, dt_inclusao = datetime.now())
 
                 # Inclui o índice na coleção de índices a ser consistida em banco de dados
                 indicesConsistir.append(indice)
@@ -184,12 +180,14 @@ class GestaoCadastro(BaseObject):
                 # Caso coleção chegou em 100 itens libera a gravação em lote em banco de dados 
                 # para não sobrecarregar chamada à API do banco de dados
                 if contadorParcial == 100:
+                    # TODO: Ajustar para atualizar a partir de GestaoCadastro
                     tipoEntidade = get_model().TipoEntidade.INDICES
                     get_model().update_multi(tipoEntidade, indicesConsistir)
                     indicesConsistir = []
                     contadorParcial = 0
                     # Atualiza a data do último índice armazanado na entidade do indexador correspondente 
                     # para controle de próximas atualizações
+                    # TODO: Ajustar para atualizar a partir de GestaoCadastro utilizando objeto Indexador
                     indexador['dt_ult_referencia'] = dataReferencia
                     indexador['dt_ult_atualiz'] = datetime.now()
                     indexador['qtd_regs_ult_atualiz'] = contador
@@ -199,10 +197,12 @@ class GestaoCadastro(BaseObject):
             # Realiza a gravação em lote dos índices no banco de dados caso algum registro tenha
             # sido tratado
             if contadorParcial > 0:
+                # TODO: Ajustar para atualizar a partir de GestaoCadastro
                 tipoEntidade = get_model().TipoEntidade.INDICES
                 get_model().update_multi(tipoEntidade, indicesConsistir)
                 # Atualiza a data do último índice armazanado na entidade do indexador correspondente 
                 # para controle de próximas atualizações
+                # TODO: Ajustar para atualizar a partir de GestaoCadastro utilizando objeto Indexador
                 indexador['dt_ult_referencia'] = dataReferencia
                 indexador['dt_ult_atualiz'] = datetime.now()
                 indexador['qtd_regs_ult_atualiz'] = contador
@@ -211,13 +211,4 @@ class GestaoCadastro(BaseObject):
 
             contadorTotal = contadorTotal + contador
 
-        # Verifica a quantidade de registros atualizados para retornar mensagem mais adequada
-        if contadorTotal == 0:
-            msgRetorno = "Banco Central não retornou novos registros a serem atualizados."
-        elif contadorTotal > 0:
-            msgRetorno = "Índices atualizados com sucesso! Total de {} registro(s) atualizado(s).".format(contadorTotal)
-
-        resposta = {'message': msgRetorno}
-        resposta.update({'Indexadores': get_model().list_indexadores() })
-
-        return _success(resposta, 200)
+        return contadorTotal

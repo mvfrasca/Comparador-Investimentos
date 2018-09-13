@@ -158,7 +158,7 @@ class ServerException(Exception):
     Argumentos:
         mensagem: mensagem detalhando o motivo do erro. Quando não informada define mensagem padrão.
     """
-    def __init__(self, mensagem:str = None):
+    def __init__(self, exception: Exception = None, mensagem:str = None):
         if mensagem is None:
             self.mensagem = "Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde."
         else:
