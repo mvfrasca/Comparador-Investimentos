@@ -82,7 +82,7 @@ def create_app(config, debug=False, testing=False, config_overrides=None):
     @app.errorhandler(InputException)
     def input_exception(e):
         logger.error(traceback.format_exc(limit=5))
-        resposta = {'InputException': {'atributo': e.campo, 'mensagem': e.mensagem}}
+        resposta = {'InputException': {'atributo': e.atributo, 'mensagem': e.mensagem}}
         return _error(resposta, 400), 400
 
     # Tratamento de erros gerados por dados de entrada incorretos ou incompletos  

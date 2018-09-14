@@ -65,7 +65,7 @@ class BancoCentral(BaseObject):
             dataInicial = datetime.strftime(dataInicial, "%d/%m/%Y")
             dataFinal = datetime.strftime(dataFinal, "%d/%m/%Y")
             # Montando a API
-            urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(codigoIndice,dataInicial,dataFinal)
+            urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(serie,dataInicial,dataFinal)
             logger.info('Chamada à API de índices: {}'.format(urlAPI))   
             # Chamando e obtendo a resposta da API
             response = requests.get(urlAPI)

@@ -107,11 +107,25 @@ class GestaoCadastro(BaseObject):
         """Retorna o indexador de acordo com o id solicitado
 
         Argumentos:
-            - id: código identificador do indexador. Ex.: ipca, cdi, poupanca.
+            id: código identificador do indexador. Ex.: ipca, cdi, poupanca.
         """
         # Obtém os dados do indexador solicitado
         tipoEntidade = get_model().TipoEntidade.INDEXADORES
         return get_model().read(tipoEntidade, id.lower())
+    
+    def list_indices(self, indexador: str, dataInicial: datetime, dataFinal: datetime ):
+        """Retorna o indexador de acordo com o id solicitado
+
+        Argumentos:
+            indexador: código identificador do indexador. Ex.: ipca, cdi, poupanca.
+            dataInicial: data inicial do período de índices a ser consultado.
+            dataFinal: data final do período de índices a ser consultado.
+        """
+        # Obtém os dados dos índices solicitados 
+        # Executa a consulta e armazena num dictionary 
+        indices = get_model().list_indices(indexador, dataInicial, dataFinal)
+
+        return indices
 
     def atualizar_indices(self):
         """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 

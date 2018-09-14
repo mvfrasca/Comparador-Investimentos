@@ -35,5 +35,14 @@
         "serie": "11",
         "qtd_regs_ult_atualiz": 0,
         "dt_ult_atualiz": "01/01/1900"
+    },
+    {
+        "id": "igpm",
+        "nome": "IGPM",
+        "dt_ult_referencia": "01/01/1900",
+        "periodicidade": "Mensal",
+        "serie": "189",
+        "qtd_regs_ult_atualiz": 0,
+        "dt_ult_atualiz": "01/01/1900"
     }
 ]

@@ -6,6 +6,7 @@ from datetime import datetime
 from model import get_model
 # Importa a classe base
 from negocio.baseobject import BaseObject
+from negocio.gestaocadastro import GestaoCadastro
 
 class Investimento(BaseObject):
     """Classe que representa um Investimento.
@@ -42,15 +43,16 @@ class Investimento(BaseObject):
         """Realiza o cálculo do investimento em função do período informado.
     
         Retorno:
-            Retorna uma lista contendo disctionaries referentes aos valores 
+            Retorna uma lista contendo dictionaries referentes aos valores 
             de saldo e rentabilidade do investimento além de uma sublista 
             da evolução do valor inicial em função do tempo (período informado)
         """
         # Inicializa o valor de investimento atualizado onde serão aplicados índices por período
         self.valSaldoBruto = self.valInvestimentoInicial
 
+        objCadastro = GestaoCadastro()
         # Executa a consulta e armazena num dictionary 
-        indices = get_model().list_indices(self.indexador, self.dataInicial, self.dataFinal)
+        indices = objCadastro.list_indices(self.indexador, self.dataInicial, self.dataFinal)
         
         # Define a variável do dicionário que armazenará a evolução do valor investido de acordo 
         # com a peridicidade do índice (diariamente ou mensalmente)
@@ -65,7 +67,7 @@ class Investimento(BaseObject):
             valIndice = indice['val_indice']
             valIndice = Decimal(valIndice) / Decimal(100)
             # De acordo com o indexador carrega o valor do índice com a taxa informada
-            if self.indexador == 'ipca':
+            if self.indexador in ['ipca', 'igpm']:
                 # Ex.: IPCA + 7%
                 valIndice = valIndice + (valIndice * (self.taxa / Decimal(100)))
             elif self.indexador in ['cdi', 'selic']:

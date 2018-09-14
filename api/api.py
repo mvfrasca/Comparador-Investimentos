@@ -34,6 +34,20 @@ api = Blueprint('api', __name__)
 
 @api.route('/investimento', methods=['GET'])
 def calcular_investimento():
+    """Calcula a evolução do investimento a partir de um valor inicial aplicando os indices referentes 
+    ao período, indexador e taxa informados.
+    
+    Argumentos:
+        valor: valor inicial do investimento
+        indexador: nome identificador do indexador (ex.: ipca, selic)
+        taxa: percentual aplicado sobre o índice (ex.: 130 (130% do cdi), 7 (IPCA + 7%))
+        dataInicial: data inicial do investimento
+        dataFinal (datetime): data de vencimento do investimento
+    Retorno:
+            Retorna uma lista contendo dictionaries referentes aos valores 
+            de saldo e rentabilidade do investimento além de uma sublista 
+            da evolução do valor inicial em função do tempo (período informado)
+    """
     # Obtém argumentos
     queryParameters = request.args
     
@@ -57,9 +71,6 @@ def calcular_investimento():
     # Validação - indexador
     if 'indexador' not in queryParameters:
         mensagem  = "Você deve informar o indexador do investimento."
-        raise InputException('indexador', mensagem)
-    elif _is_number(queryParameters.get('valor')) == False:
-        mensagem  = "O valor inicial do investimento é inválido. Utilizar ponto ao invés de virgula para casas decimais."
         raise InputException('indexador', mensagem)
     else:
         indexador = queryParameters.get('indexador').lower()
@@ -86,7 +97,7 @@ def calcular_investimento():
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
-        mensagem  = "Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA"
+        mensagem  = "Você deve informar a data final do investimento. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
     elif _is_date(queryParameters.get('dataFinal'), '%d/%m/%Y') == False:
         mensagem  = "Data final do investimento inválida. Formato esperado: DD/MM/AAAA"
@@ -104,9 +115,9 @@ def calcular_investimento():
     except Exception as e:
         raise ServerException(e)
     else:
-        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!', 'resultadoInvestimento': jsonify(resultadoInvestimento) }, 201), 201
+        return _success({ 'mensagem': 'Cálculo do investimento realizado com sucesso!', 'resultadoInvestimento': resultadoInvestimento }, 201), 201
 
-@api.route('/indexadores', methods=['GET'])
+@api.route('/indexadores', methods=['POST'])
 def post_indexadores():
     """Carga inicial das entidades que representarão os indexadores.
     """
@@ -120,7 +131,7 @@ def post_indexadores():
     except BusinessException as be:
         raise be
     except Exception as e:
-        raise ServerException()
+        raise ServerException(e)
     else:
         return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201
 
@@ -172,7 +183,7 @@ def list_indexadores():
 
 @api.route('/indexadores/<id>', methods=['GET'])
 def get_indexador(id):
-    """Retorna lista com todos o indexador solicitado
+    """Retorna o indexador solicitado
     """
     try:
         # Instancia a classe de negócios responsável pela gestão de cadastros da API
@@ -185,5 +196,63 @@ def get_indexador(id):
         raise ServerException(e)
     else:  
         resposta = {'mensagem': 'Consulta ao indexador realizada com sucesso'}
-        resposta.update({'Indexador': jsonify(indexador) })
+        resposta.update({'Indexador': indexador})
+        return _success(resposta, 200), 200
+
+@api.route('/indexadores/<id>/indices', methods=['GET'])
+def list_indices(id):
+    """Retorna lista de índices referente ao indexador e período solicitado
+
+    Argumentos:
+        indexador: código do indexador. Ex.: ipca, poupanca, cdi.
+    Argumentos Query string:
+        dataInicial: data inicial do período de índices a ser consultado.
+        dataFinal: data final do período de índices a ser consultado.
+    Retorno:
+        Lista de índices com data e valor
+    """
+    # Obtém argumentos
+    queryParameters = request.args
+    # Loga os estado atual do indexador
+    logger.info("Parâmetros recebidos para retorno dos índices: {}".format(queryParameters))
+    
+    # Validação - indexador
+    if id is None:
+        mensagem  = "Você deve informar o indexador para consulta aos índices."
+        raise InputException('indexador', mensagem)
+    else:
+        indexador = id.lower()
+
+    # Validação - dataInicial
+    if 'dataInicial' not in queryParameters:
+        mensagem  = "Você deve informar a data inicial do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
+        raise InputException('dataInicial', mensagem)
+    elif _is_date(queryParameters.get('dataInicial'), '%d/%m/%Y') == False:
+        mensagem  = "Data inicial do período inválida. Formato esperado: DD/MM/AAAA"
+        raise InputException('dataInicial', mensagem)
+    else:
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%d/%m/%Y")
+
+    # Validação - dataFinal
+    if 'dataFinal' not in queryParameters:
+        mensagem  = "Você deve informar a data final do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
+        raise InputException('dataFinal', mensagem)
+    elif _is_date(queryParameters.get('dataFinal'), '%d/%m/%Y') == False:
+        mensagem  = "Data final do período inválida. Formato esperado: DD/MM/AAAA"
+        raise InputException('dataFinal', mensagem)
+    else:
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%d/%m/%Y")
+
+    try:
+        # Instancia a classe de negócios responsável pela gestão de cadastros da API
+        objGestaoCadastro = GestaoCadastro()
+        # Obtém o indexadores através do id
+        indices = objGestaoCadastro.list_indices(indexador, dataInicial, dataFinal)
+    except BusinessException as be:
+        raise be
+    except Exception as e:
+        raise ServerException(e)
+    else:  
+        resposta = {'mensagem': 'Consulta aos índices realizada com sucesso'}
+        resposta.update({'Índices': indices})
         return _success(resposta, 200), 200
