@@ -178,7 +178,7 @@ def list_indexadores():
         raise ServerException(e)
     else:
         resposta = {'mensagem': 'Consulta aos indexadores realizada com sucesso'}
-        resposta.update({'Indexadores': jsonify(indexadores)})
+        resposta.update({'Indexadores': indexadores})
         return _success(resposta, 200), 200
 
 @api.route('/indexadores/<id>', methods=['GET'])
