@@ -135,7 +135,7 @@ def post_indexadores():
     else:
         return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201
 
-@api.route('/indices', methods=['GET'])
+@api.route('/indexadores/all/indices', methods=['GET'])
 def atualizar_indices():
     """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 
     última data de referência importada da API do Banco Central.

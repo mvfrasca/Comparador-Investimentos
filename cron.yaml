@@ -1,24 +1,24 @@
 cron:
 - description: "Job de atualização dos índices referentes aos indicadores cadastrados: 08:00"
-  url: /api/indices
+  url: /api/indexadores/all/indices
   #target: beta
   schedule: every monday, tuesday, wednesday, thursday, friday, saturday 08:00
   timezone: America/Sao_Paulo
   retry_parameters:
     min_backoff_seconds: 60
     max_doublings: 5
-- description: "Job de atualização dos índices referentes aos indicadores cadastrados: 09:30"
-  url: /api/indices
+- description: "Job de atualização dos índices referentes aos indicadores cadastrados: 12:00"
+  url: /api/indexadores/all/indices
   #target: beta
-  schedule: every monday, tuesday, wednesday, thursday, friday 09:30
+  schedule: every monday, tuesday, wednesday, thursday, friday 12:00
   timezone: America/Sao_Paulo
   retry_parameters:
     min_backoff_seconds: 60
     max_doublings: 5
-- description: "Job de atualização dos índices referentes aos indicadores cadastrados: 12:00"
-  url: /api/indices
+- description: "Job de atualização dos índices referentes aos indicadores cadastrados: 19:00"
+  url: /api/indexadores/all/indices
   #target: beta
-  schedule: every monday, tuesday, wednesday, thursday, friday 12:00
+  schedule: every monday, tuesday, wednesday, thursday, friday 19:00
   timezone: America/Sao_Paulo
   retry_parameters:
     min_backoff_seconds: 60
