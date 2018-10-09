@@ -124,10 +124,7 @@ def update(kind: TipoEntidade, data: list, id: str = None):
     #return from_datastore(entity)
     return key
 
-
 create = update
-# [END update]
-
 
 def delete(kind: TipoEntidade, id: str):
     ds = get_client()
