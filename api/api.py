@@ -38,6 +38,7 @@ def calcular_investimento():
     ao período, indexador e taxa informados.
     
     Argumentos:
+        tipoInvestimento: tipo de investimento (ex.: CDB, LCI, LCA, Poupanca)
         valor: valor inicial do investimento
         indexador: nome identificador do indexador (ex.: ipca, selic)
         taxa: percentual aplicado sobre o índice (ex.: 130 (130% do cdi), 7 (IPCA + 7%))
@@ -58,6 +59,15 @@ def calcular_investimento():
     # ------------------------------------------------------------------------------ #
     # Resgata e valida os dados de entrada para cálculo da evolução do investimento
     # ------------------------------------------------------------------------------ #
+    # Validação - indexador
+    if 'tipoInvestimento' not in queryParameters:
+        mensagem  = "Você deve informar o tipo de investimento."
+        raise InputException('tipoInvestimento', mensagem)
+    else:
+        tipoInvestimento = queryParameters.get('tipoInvestimento').lower()
+    
+    # TODO: Verificar se é um tipo de investimento válido
+
     # Validação - valor
     if 'valor' not in queryParameters:
         mensagem  = "Você deve informar o valor inicial do investimento."
@@ -74,6 +84,8 @@ def calcular_investimento():
         raise InputException('indexador', mensagem)
     else:
         indexador = queryParameters.get('indexador').lower()
+    
+    # TODO: Verificar se é um indexador válido
 
     # Validação - taxa
     if 'taxa' not in queryParameters:
@@ -97,8 +109,10 @@ def calcular_investimento():
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
-        mensagem  = "Você deve informar a data final do investimento. Formato esperado: DD/MM/AAAA"
-        raise InputException('dataFinal', mensagem)
+        # mensagem  = "Você deve informar a data final do investimento. Formato esperado: DD/MM/AAAA"
+        # raise InputException('dataFinal', mensagem)
+        # Quando não informada assumir data atual
+        dataFinal = datetime.now()
     elif _is_date(queryParameters.get('dataFinal'), '%d/%m/%Y') == False:
         mensagem  = "Data final do investimento inválida. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
@@ -107,7 +121,7 @@ def calcular_investimento():
     
     try: 
         # Instancia a classe de negócio Investimento 
-        objInvest = Investimento(valInvestimentoInicial, indexador, taxa, dataInicial, dataFinal)
+        objInvest = Investimento(tipoInvestimento, valInvestimentoInicial, indexador, taxa, dataInicial, dataFinal)
         # Realiza o cálculo de evolução do investimento
         resultadoInvestimento = objInvest.calcular_investimento()
     except BusinessException as be:
@@ -115,7 +129,7 @@ def calcular_investimento():
     except Exception as e:
         raise ServerException(e)
     else:
-        return _success({ 'mensagem': 'Cálculo do investimento realizado com sucesso!', 'resultadoInvestimento': resultadoInvestimento }, 201), 201
+        return _success({ 'mensagem': 'Cálculo do investimento realizado com sucesso!', 'resultadoInvestimento': resultadoInvestimento }, 200), 200
 
 @api.route('/indexadores', methods=['POST'])
 def post_indexadores():

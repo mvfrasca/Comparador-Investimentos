@@ -1,2 +1,4 @@
-.vscode/settings.json
 api/__pycache__/*.pyc
+api/__pycache__/api.cpython-37.pyc
+model/__pycache__/model_datastore.cpython-37.pyc
+negocio/__pycache__/investimento.cpython-37.pyc
