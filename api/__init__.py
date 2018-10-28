@@ -16,7 +16,7 @@ import logging
 import traceback
 from model import get_model
 from flask import current_app, Flask, redirect, url_for
-from flask_cors import CORS
+# from flask_cors import CORS
 # Importa o módulo Helper
 import utils.helper
 from utils.helper import _error
@@ -26,7 +26,7 @@ from utils.helper import ServerException
 
 def create_app(config, debug=False, testing=False, config_overrides=None):
     app = Flask(__name__)
-    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
     app.config.from_object(config)
 
     app.debug = debug

@@ -129,7 +129,13 @@ def calcular_investimento():
     except Exception as e:
         raise ServerException(e)
     else:
-        return _success({ 'mensagem': 'Cálculo do investimento realizado com sucesso!', 'resultadoInvestimento': resultadoInvestimento }, 200), 200
+        return _success({ 'mensagem': 'Cálculo do investimento realizado com sucesso!', 'resultadoInvestimento': resultadoInvestimento }, 200), 200, {'Access-Control-Allow-Origin': '*'} 
+
+@api.route('/investimento', methods=['OPTIONS'])
+def options (self):
+    return {'Allow' : 'GET' }, 200, \
+    { 'Access-Control-Allow-Origin': '*', \
+    'Access-Control-Allow-Methods' : 'GET' }
 
 @api.route('/indexadores', methods=['POST'])
 def post_indexadores():
@@ -147,7 +153,7 @@ def post_indexadores():
     except Exception as e:
         raise ServerException(e)
     else:
-        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201
+        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/all/indices', methods=['GET'])
 def atualizar_indices():
@@ -175,7 +181,7 @@ def atualizar_indices():
 
     resposta = {'mensagem': mensagem}
     resposta.update({'Indexadores': objGestaoCadastro.list_indexadores()})
-    return _success(resposta, statusCode), statusCode
+    return _success(resposta, statusCode), statusCode, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/all', methods=['GET'])
 def list_indexadores():
@@ -193,7 +199,7 @@ def list_indexadores():
     else:
         resposta = {'mensagem': 'Consulta aos indexadores realizada com sucesso'}
         resposta.update({'Indexadores': indexadores})
-        return _success(resposta, 200), 200
+        return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/<id>', methods=['GET'])
 def get_indexador(id):
@@ -211,7 +217,7 @@ def get_indexador(id):
     else:  
         resposta = {'mensagem': 'Consulta ao indexador realizada com sucesso'}
         resposta.update({'Indexador': indexador})
-        return _success(resposta, 200), 200
+        return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/<id>/indices', methods=['GET'])
 def list_indices(id):
@@ -269,4 +275,4 @@ def list_indices(id):
     else:  
         resposta = {'mensagem': 'Consulta aos índices realizada com sucesso'}
         resposta.update({'Índices': indices})
-        return _success(resposta, 200), 200
+        return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
