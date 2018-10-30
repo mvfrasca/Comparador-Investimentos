@@ -132,7 +132,7 @@ def calcular_investimento():
         return _success({ 'mensagem': 'Cálculo do investimento realizado com sucesso!', 'resultadoInvestimento': resultadoInvestimento }, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/investimento', methods=['OPTIONS'])
-def options (self):
+def investimento_options (self):
     return {'Allow' : 'GET' }, 200, \
     { 'Access-Control-Allow-Origin': '*', \
     'Access-Control-Allow-Methods' : 'GET' }
@@ -201,6 +201,12 @@ def list_indexadores():
         resposta.update({'Indexadores': indexadores})
         return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
+@api.route('/indexadores/all', methods=['OPTIONS'])
+def indexadores_options (self):
+    return {'Allow' : 'GET' }, 200, \
+    { 'Access-Control-Allow-Origin': '*', \
+    'Access-Control-Allow-Methods' : 'GET' }
+    
 @api.route('/indexadores/<id>', methods=['GET'])
 def get_indexador(id):
     """Retorna o indexador solicitado
