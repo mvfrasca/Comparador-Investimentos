@@ -180,7 +180,7 @@ def atualizar_indices():
         mensagem = "Índices atualizados com sucesso! Total de {} registro(s) atualizado(s).".format(contadorTotal)
 
     resposta = {'mensagem': mensagem}
-    resposta.update({'Indexadores': objGestaoCadastro.list_indexadores()})
+    resposta.update({'indexadores': objGestaoCadastro.list_indexadores()})
     return _success(resposta, statusCode), statusCode, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/all', methods=['GET'])
@@ -198,7 +198,7 @@ def list_indexadores():
         raise ServerException(e)
     else:
         resposta = {'mensagem': 'Consulta aos indexadores realizada com sucesso'}
-        resposta.update({'Indexadores': indexadores})
+        resposta.update({'indexadores': indexadores})
         return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/all', methods=['OPTIONS'])
@@ -222,7 +222,7 @@ def get_indexador(id):
         raise ServerException(e)
     else:  
         resposta = {'mensagem': 'Consulta ao indexador realizada com sucesso'}
-        resposta.update({'Indexador': indexador})
+        resposta.update({'indexador': indexador})
         return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/<id>/indices', methods=['GET'])
@@ -280,5 +280,5 @@ def list_indices(id):
         raise ServerException(e)
     else:  
         resposta = {'mensagem': 'Consulta aos índices realizada com sucesso'}
-        resposta.update({'Índices': indices})
+        resposta.update({'indices': indices})
         return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
