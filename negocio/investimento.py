@@ -112,8 +112,8 @@ class Investimento(BaseObject):
         self.valSaldoLiquido = self.valInvestimentoInicial + self.rentabilidadeLiquida
 
         # Monta o dictionary com o resultado do investimento para retorno do método
-        resultadoInvestimento.update({'tipoInvestimento': self.tipoInvestimento.upper()})
-        resultadoInvestimento.update({'indexador': self.indexador.upper()})
+        resultadoInvestimento.update({'tipoInvestimento': self.tipoInvestimento})
+        resultadoInvestimento.update({'indexador': self.indexador})
         resultadoInvestimento.update({'taxa': float(self.taxa)})
         resultadoInvestimento.update({'valInvestimentoInicial': float(self.valInvestimentoInicial)})
         resultadoInvestimento.update({'dataInicial': datetime.strftime(self.dataInicial, "%d/%m/%Y")})
