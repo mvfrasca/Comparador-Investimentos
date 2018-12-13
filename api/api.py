@@ -64,7 +64,7 @@ def calcular_investimento():
         mensagem  = "Você deve informar o tipo de investimento."
         raise InputException('tipoInvestimento', mensagem)
     else:
-        tipoInvestimento = queryParameters.get('tipoInvestimento').lower()
+        tipoInvestimento = queryParameters.get('tipoInvestimento')
     
     # TODO: Verificar se é um tipo de investimento válido
 
@@ -83,7 +83,7 @@ def calcular_investimento():
         mensagem  = "Você deve informar o indexador do investimento."
         raise InputException('indexador', mensagem)
     else:
-        indexador = queryParameters.get('indexador').lower()
+        indexador = queryParameters.get('indexador')
     
     # TODO: Verificar se é um indexador válido
 
@@ -101,11 +101,11 @@ def calcular_investimento():
     if 'dataInicial' not in queryParameters:
         mensagem  = "Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA"
         raise InputException('dataInicial', mensagem)
-    elif _is_date(queryParameters.get('dataInicial'), '%d/%m/%Y') == False:
-        mensagem  = "Data inicial do investimento inválida. Formato esperado: DD/MM/AAAA"
+    elif _is_date(queryParameters.get('dataInicial'), "%Y-%m-%d") == False:
+        mensagem  = "Data inicial do investimento inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataInicial', mensagem)
     else:
-        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%d/%m/%Y")
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d")
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
@@ -113,11 +113,11 @@ def calcular_investimento():
         # raise InputException('dataFinal', mensagem)
         # Quando não informada assumir data atual
         dataFinal = datetime.now()
-    elif _is_date(queryParameters.get('dataFinal'), '%d/%m/%Y') == False:
-        mensagem  = "Data final do investimento inválida. Formato esperado: DD/MM/AAAA"
+    elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
+        mensagem  = "Data final do investimento inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataFinal', mensagem)
     else:
-        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%d/%m/%Y")
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d")
     
     try: 
         # Instancia a classe de negócio Investimento 
@@ -253,21 +253,21 @@ def list_indices(id):
     if 'dataInicial' not in queryParameters:
         mensagem  = "Você deve informar a data inicial do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
         raise InputException('dataInicial', mensagem)
-    elif _is_date(queryParameters.get('dataInicial'), '%d/%m/%Y') == False:
+    elif _is_date(queryParameters.get('dataInicial'), '%Y-%m-%d') == False:
         mensagem  = "Data inicial do período inválida. Formato esperado: DD/MM/AAAA"
         raise InputException('dataInicial', mensagem)
     else:
-        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%d/%m/%Y")
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d")
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
         mensagem  = "Você deve informar a data final do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
-    elif _is_date(queryParameters.get('dataFinal'), '%d/%m/%Y') == False:
+    elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
         mensagem  = "Data final do período inválida. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
     else:
-        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%d/%m/%Y")
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d")
 
     try:
         # Instancia a classe de negócios responsável pela gestão de cadastros da API

@@ -1,4 +1,7 @@
-api/__pycache__/*.pyc
 api/__pycache__/api.cpython-37.pyc
 model/__pycache__/model_datastore.cpython-37.pyc
 negocio/__pycache__/investimento.cpython-37.pyc
+api/__pycache__/__init__.cpython-37.pyc
+api/__pycache__/api.cpython-37.pyc
+negocio/__pycache__/investimento.cpython-37.pyc
+utils/__pycache__/helper.cpython-37.pyc

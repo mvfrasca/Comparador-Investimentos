@@ -25,9 +25,9 @@ class Investimento(BaseObject):
         # Define a precisão para 7 casas decimais
         getcontext().prec = 17
         # Atualiza os atributos com os valores informados na instanciação da classe
-        self.tipoInvestimento = tipoInvestimento.lower()
+        self.tipoInvestimento = tipoInvestimento
         self.valInvestimentoInicial = Decimal(valInvestimentoInicial)
-        self.indexador = indexador.lower()
+        self.indexador = indexador
         self.taxa = Decimal(taxa)
         self.dataInicial = dataInicial 
         self.dataFinal = dataFinal
@@ -62,7 +62,7 @@ class Investimento(BaseObject):
 
         objCadastro = GestaoCadastro()
         # Executa a consulta e armazena num dictionary 
-        indices = objCadastro.list_indices(self.indexador, self.dataInicial, self.dataFinal)
+        indices = objCadastro.list_indices(self.indexador.lower(), self.dataInicial, self.dataFinal)
         
         # Calcula a quantidade de dias corridos do investimento
         self.qtdDiasCorridos = (self.dataFinal - self.dataInicial).days
@@ -80,11 +80,11 @@ class Investimento(BaseObject):
             valIndice = indice['val_indice']
             valIndice = Decimal(valIndice)
             # De acordo com o indexador carrega o valor do índice com a taxa informada
-            if self.indexador in ['ipca', 'igpm']:
+            if self.indexador.lower() in ['ipca', 'igpm']:
                 # Ex.: IPCA + 7%
                 taxaMensal = self.taxaAnualToMensal(self.taxa)
                 valIndice = valIndice + taxaMensal
-            elif self.indexador in ['cdi', 'selic']:
+            elif self.indexador.lower() in ['cdi', 'selic']:
                 # Ex.: 130% do CDI
                 valIndice = valIndice * (self.taxa / Decimal(100))
             # Atualizado Saldo Bruto do investimento
@@ -99,7 +99,7 @@ class Investimento(BaseObject):
         # Rentabilidade bruta
         self.rentabilidadeBruta = self.valSaldoBruto - self.valInvestimentoInicial
         # Imposto de renda
-        if self.tipoInvestimento in ['poupanca', 'lci', 'lca']:
+        if self.tipoInvestimento.lower() in ['poupanca', 'lci', 'lca']:
             self.percImpostoRenda = Decimal(0)
         else:
             self.percImpostoRenda = self.obterPercIR(self.qtdDiasCorridos)
@@ -116,8 +116,8 @@ class Investimento(BaseObject):
         resultadoInvestimento.update({'indexador': self.indexador})
         resultadoInvestimento.update({'taxa': float(self.taxa)})
         resultadoInvestimento.update({'valInvestimentoInicial': float(self.valInvestimentoInicial)})
-        resultadoInvestimento.update({'dataInicial': datetime.strftime(self.dataInicial, "%d/%m/%Y")})
-        resultadoInvestimento.update({'dataFinal': datetime.strftime(self.dataFinal, "%d/%m/%Y")})
+        resultadoInvestimento.update({'dataInicial': datetime.strftime(self.dataInicial, "%Y-%m-%d")})
+        resultadoInvestimento.update({'dataFinal': datetime.strftime(self.dataFinal, "%Y-%m-%d")})
         resultadoInvestimento.update({'valSaldoBruto': float(self.valSaldoBruto)})
         resultadoInvestimento.update({'rentabilidadeBruta': float(self.rentabilidadeBruta)})
         resultadoInvestimento.update({'percImpostoRenda': float(self.percImpostoRenda)})

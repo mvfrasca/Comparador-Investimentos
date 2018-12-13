@@ -89,13 +89,13 @@ def _is_number(obj):
     return False
 
 # Valida se string contém um número inteiro ou decimal
-# "%d/%m/%Y"
+# "%Y-%m-%d"
 def _is_date(obj, mascara: str):
     """Valida se o objeto informado é uma data ou data/hora válida.
 
     Argumentos:
         obj: objeto a ser validado. Ex.: '01/01/2018'
-        mascara: máscara de data/hora do objeto. Ex.: '%d/%m/%Y'
+        mascara: máscara de data/hora do objeto. Ex.: '%Y-%m-%d'
     Retorno:
         True: se for uma data ou data/hora válida.
         False: se for inválida.
