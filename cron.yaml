@@ -10,7 +10,7 @@ cron:
 - description: "Job de atualização dos índices referentes aos indicadores cadastrados: 12:00"
   url: /api/indexadores/all/indices
   #target: beta
-  schedule: every monday, tuesday, wednesday, thursday, friday 12:00
+  schedule: every monday, tuesday, wednesday, thursday, friday, saturday 12:00
   timezone: America/Sao_Paulo
   retry_parameters:
     min_backoff_seconds: 60
@@ -18,7 +18,7 @@ cron:
 - description: "Job de atualização dos índices referentes aos indicadores cadastrados: 19:00"
   url: /api/indexadores/all/indices
   #target: beta
-  schedule: every monday, tuesday, wednesday, thursday, friday 19:00
+  schedule: every monday, tuesday, wednesday, thursday, friday, saturday 19:00
   timezone: America/Sao_Paulo
   retry_parameters:
     min_backoff_seconds: 60

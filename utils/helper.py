@@ -2,7 +2,7 @@ import json
 import os
 from flask import jsonify
 # Importa módulo para tratamento de data/hora
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Get variavel de ambiente
 def _variable(name):
@@ -123,8 +123,83 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
     for atributo, formato in nomes_e_formatos.items():
         # Converte o campo data para datetime
         item[atributo] = datetime.strptime(item[atributo], formato)
+        # Converte a data para o formato inteiro esperado YYYYMMDD
+        item[atributo] = int(datetime.strftime(item[atributo]), "%Y%m%d")
 
     return item
+
+# Converte uma string formatada de data em formato inteiro
+def _strdate_to_int(data: str, mascara_entrada: str):
+    """Converte uma string formatada em objeto datetime considerando o fuso horário pré-definido YYYYMMDD
+
+    Argumentos:
+        data: objeto a ser validado. Ex.: '01/01/2018'
+        mascara_entrada: máscara de data/hora da string de entrada. Ex.: '%Y-%m-%d'
+    Retorno:
+        Inteiro represetando a Data no formato YYYYMMDD
+    """
+    try:
+        # Converte o campo data para datetime
+        date = datetime.strptime(data, mascara_entrada)
+        # Converte a data para o formato inteiro esperado YYYYMMDD
+        intdate = int(datetime.strftime(date), "%Y%m%d")
+        return intdate
+    except:
+        pass
+
+# Converte um inteiro formatada de data em formato inteiro
+def _strdate_to_int(data: str, mascara_entrada: str):
+    """Converte uma string formatada em inteiro considerando formato pré-definido YYYYMMDD
+
+    Argumentos:
+        data: string de uma data formatada. Ex.: '01/01/2018'
+        mascara_entrada: máscara de data/hora da string de entrada. Ex.: '%Y-%m-%d'
+    Retorno:
+        Inteiro representando a Data no formato YYYYMMDD
+    """
+    try:
+        # Converte o campo data para datetime
+        date = datetime.strptime(data, mascara_entrada)
+        # Converte a data para o formato inteiro esperado YYYYMMDD
+        intdate = int(datetime.strftime(date), "%Y%m%d")
+        return intdate
+    except:
+        pass
+
+# Converte um inteiro formatada de data em formato inteiro
+def _date_to_int(data: datetime):
+    """Converte uma data em inteiro considerando formato pré-definido YYYYMMDD
+
+    Argumentos:
+        data: data no formato datetime
+    Retorno:
+        Inteiro representando a Data no formato YYYYMMDD
+    """
+    try:
+        # Converte a data para o formato inteiro esperado YYYYMMDD
+        intdate = int(datetime.strftime(data), "%Y%m%d")
+        return intdate
+    except:
+        pass
+
+# Converte um inteiro formatada de data em formato inteiro
+def _intdate_to_str(data: int, mascara_saida: str):
+    """Converte inteiro que representa uma data em uma string com mascara solicitada
+
+    Argumentos:
+        data: string de uma data formatada. Ex.: '01/01/2018'
+        mascara_saida: máscara de data/hora da string de saída. Ex.: '%Y-%m-%d'
+    Retorno:
+        String representando a data no formato solicitado
+    """
+    try:
+        # Converte o campo data para datetime
+        date = datetime.strptime(data, "%Y%m%d")
+        # Converte a data para o formato inteiro esperado YYYYMMDD
+        strdate = int(datetime.strftime(date), mascara_saida)
+        return strdate
+    except:
+        pass
 
 class InputException(Exception):
     """Exceção disparada nos casos argumentos de entrada inválidos.

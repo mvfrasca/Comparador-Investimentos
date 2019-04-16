@@ -28,11 +28,11 @@ class Indice(BaseObject):
         dt_inclusao: data da inclusão do índice na base de dados de índices
     """
     # Método criador
-    def __init__(self, tp_indice: str, dt_referencia: datetime, val_indice: float, dt_inclusao: datetime):
+    def __init__(self, tp_indice: str, dt_referencia: int, val_indice: float, dt_inclusao: datetime):
         # Define a precisão para 7 casas decimais
         getcontext().prec = 7
         # Define chave única para o índice
-        self.id = tp_indice.lower() + '-' + datetime.strftime(dt_referencia, "%Y%m%d")
+        self.id = tp_indice.lower() + '-' + str(dt_referencia)
         # Atualiza os atributos com os valores informados na instanciação da classe
         self.tp_indice = tp_indice.lower()
         self.dt_referencia = dt_referencia

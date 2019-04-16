@@ -8,6 +8,9 @@ import json, requests
 import utils.helper
 from utils.helper import _is_number
 from utils.helper import _is_date
+from utils.helper import _strdate_to_int
+from utils.helper import _date_to_int
+from utils.helper import _intdate_to_str
 from utils.helper import ServerException
 # Importa o módulo de log
 import logging
@@ -24,7 +27,7 @@ class BancoCentral(BaseObject):
     def __init__(self):
        pass
     
-    def list_indices(self, serie: str, dataInicial: datetime, dataFinal: datetime):
+    def list_indices(self, serie: str, dataInicial: int, dataFinal: int):
         """Acessa a API do Banco Central e retorna os índices referentes à série e período informados.
 
         Argumentos:
@@ -62,8 +65,8 @@ class BancoCentral(BaseObject):
         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.196/dados?formato=json&dataInicial=01/01/2018&dataFinal=26/08/2018
         try:
             # Formatando datas com o formato string esperado pela API
-            dataInicial = datetime.strftime(dataInicial, "%d/%m/%Y")
-            dataFinal = datetime.strftime(dataFinal, "%d/%m/%Y")
+            dataInicial = _intdate_to_str(dataInicial, "%d/%m/%Y")
+            dataFinal = _intdate_to_str(dataFinal, "%d/%m/%Y")
             # Montando a API
             urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(serie,dataInicial,dataFinal)
             logger.info('Chamada à API de índices: {}'.format(urlAPI))   
@@ -78,7 +81,7 @@ class BancoCentral(BaseObject):
             
             # TODO: Tratar campos retornados para os tipos de dados adequados
             # Ordena lista de obtidas da API
-            indices = sorted(response.json(), key = lambda campo: datetime.strptime(campo['data'], '%d/%m/%Y'))
+            indices = sorted(response.json(), key = lambda campo: _strdate_to_int(campo['data'], '%d/%m/%Y'))
 
         except Exception as e:
             raise ServerException(e)

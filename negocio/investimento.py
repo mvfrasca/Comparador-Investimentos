@@ -1,7 +1,7 @@
 # Importanto módulo para tratamento de números decimais
 from decimal import Decimal, getcontext, ROUND_HALF_UP
 # Importa módulo para tratamento de data/hora
-from datetime import datetime
+from datetime import datetime, timedelta
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
 # Importa a classe base
@@ -62,7 +62,7 @@ class Investimento(BaseObject):
 
         objCadastro = GestaoCadastro()
         # Executa a consulta e armazena num dictionary 
-        indices = objCadastro.list_indices(self.indexador.lower(), self.dataInicial, self.dataFinal)
+        indices = objCadastro.list_indices(self.indexador.lower(), self.dataInicial - timedelta(days=1), self.dataFinal)
         
         # Calcula a quantidade de dias corridos do investimento
         self.qtdDiasCorridos = (self.dataFinal - self.dataInicial).days

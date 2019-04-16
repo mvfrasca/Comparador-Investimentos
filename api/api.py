@@ -155,6 +155,24 @@ def post_indexadores():
     else:
         return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
+@api.route('/feriados', methods=['POST'])
+def post_feriados():
+    """Carga inicial das entidades que representarão os feriados.
+    """
+    # if request.method == 'POST':
+    #     data = request.form.to_dict(flat=True)
+    try:
+        # Instancia o a classe de negócio GestaoCadastro
+        objGestaoCadastro = GestaoCadastro()
+        # Realiza a carga inicial dos indexadores
+        qtdFeriados = objGestaoCadastro.criar_feriados()
+    except BusinessException as be:
+        raise be
+    except Exception as e:
+        raise ServerException(e)
+    else:
+        return _success({ 'mensagem': '{} feriados incluidos com sucesso!'.format(qtdFeriados) }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
+
 @api.route('/indexadores/all/indices', methods=['GET'])
 def atualizar_indices():
     """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 

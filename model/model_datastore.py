@@ -26,6 +26,7 @@ class TipoEntidade(Enum):
     '''
     INDEXADORES = 'Indexadores'
     INDICES = 'Indices'
+    FERIADOS = 'Feriados'
 
 def init_app(app):
     pass

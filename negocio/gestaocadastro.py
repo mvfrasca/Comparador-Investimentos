@@ -4,11 +4,16 @@ from decimal import Decimal, getcontext
 from datetime import datetime
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
-# Importa módulo pra tratamento de arquivos json
+# Importa módulo para tratamento de arquivos json
 import json
+# Importa módulo para tratamento de arquivos csv
+import csv
 # Importa o módulo Helper
 import utils.helper
 from utils.helper import _converter_datas_dict
+from utils.helper import _strdate_to_int
+from utils.helper import _date_to_int
+from utils.helper import _intdate_to_str
 from utils.helper import InputException
 from utils.helper import BusinessException
 from utils.helper import ServerException
@@ -91,7 +96,33 @@ class GestaoCadastro(BaseObject):
         # key = get_model().create('Indexadores', indexador, 'selic')
         # keys.append({key})
     
-    def list_indexadores(self, dataReferencia: datetime=None):
+    def criar_feriados(self):
+        """Realiza a carga inicial das entidades que representarão os feriados bancários.
+           CSV extraído de http://www.anbima.com.br/feriados/feriados.asp
+        Retorno:
+            Quantidade de feriados incluidos.
+        """
+        # Carrega arquivo CSV que contém a carga inicial dos feriados
+        with open(r'''static\json\feriados.csv''',encoding='UTF8') as f:
+            reader = csv.reader(f, delimiter=';')
+            feriados = []
+            
+            for linha in reader:
+                # Recupera atributo data da linha do arquivo e formata com padrão de data inteiro
+                dt_feriado = _strdate_to_int(linha[0], "%d/%m/%Y")
+                # Prepara o dicionário com os atributos da entidade feriado
+                feriado = {'id': dt_feriado, 'dt_feriado': dt_feriado, 'descricao': linha[2]}
+                feriados.append(feriado)
+
+            # Loga os estado atual do indicador
+            logger.info("Carga inicial de feriados. Qtd. feriados carregada: {}".format(len(feriados)))
+            # Inclui/atualiza a base de dados com os indexadores
+            tipoEntidade = get_model().TipoEntidade.FERIADOS
+            get_model().update_multi(tipoEntidade, feriados)
+
+        return len(feriados)
+
+    def list_indexadores(self, dataReferencia: int=None):
         """Obtém a lista de indexadores disponíveis cuja data de última atualização é anterior ao argumento dataReferencia.
         
         Argumentos:
@@ -113,7 +144,7 @@ class GestaoCadastro(BaseObject):
         tipoEntidade = get_model().TipoEntidade.INDEXADORES
         return get_model().read(tipoEntidade, id.lower())
     
-    def list_indices(self, indexador: str, dataInicial: datetime, dataFinal: datetime ):
+    def list_indices(self, indexador: str, dataInicial: int, dataFinal: int ):
         """Retorna o indexador de acordo com o id solicitado
 
         Argumentos:
@@ -133,8 +164,9 @@ class GestaoCadastro(BaseObject):
         """
         try:
             # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
-            # zerados caso contrário datasotore não reconhece)
-            dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+            # zerados caso contrário datastore não reconhece)
+            #dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+            dataAtual = _date_to_int(datetime.now())
             # Inicializa o contador geral de registros atualizados
             contadorTotal = 0
             # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)
@@ -156,13 +188,13 @@ class GestaoCadastro(BaseObject):
             periodicidade = indexador['periodicidade']
             # Caso o índicador seja de peridicidade mensal e o mês da última atualização é igual ao 
             # mês atual pula para o próximo indexador
-            if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
-                # Pula para o próximo indexador
-                continue
+            # if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
+            #     # Pula para o próximo indexador
+            #     continue
             # Instancia a classe de negócios responsável pela consulta à API do Banco Central
             objBC = BancoCentral()
             # Recupera indices disponíveis do indexador desde a última atualização até hoje 
-            indicesAPI = objBC.list_indices(serie,dataUltReferencia,dataAtual)
+            indicesAPI = objBC.list_indices(serie, dataUltReferencia, dataAtual)
 
             # Inicializa coleção e contadores
             indicesConsistir = []
@@ -173,13 +205,13 @@ class GestaoCadastro(BaseObject):
             for indiceAPI in indicesAPI:
                 logger.info('Índice a ser atualizado: {0}, dados: {1}'.format(tipoIndice, indiceAPI))
                 # Recupera as propriedades do índice (data e valor)
-                dataReferencia = datetime.strptime(indiceAPI['data'], "%d/%m/%Y")
+                dataReferencia = indiceAPI['data']
                 valorIndice = float(indiceAPI['valor'])
                 # Verifica se data de referência do índice é anterior à data da última atualização 
                 # e caso positivo pula para o próximo (API do BC retornar sempre um dia pra tras)]
-                if (dataReferencia.isocalendar() <= dataUltReferencia.isocalendar()):
-                    logger.info('Índice descartado por ser anterior a última atualização')
-                    continue
+                # if (dataReferencia.isocalendar() <= dataUltReferencia.isocalendar()):
+                #     logger.info('Índice descartado por ser anterior a última atualização')
+                #     continue
         
                 # Popula uma instancia de índice a ser consistida
                 indice = Indice(tp_indice = tipoIndice, dt_referencia = dataReferencia, val_indice = valorIndice, dt_inclusao = datetime.now())
