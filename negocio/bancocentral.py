@@ -11,6 +11,7 @@ from utils.helper import _is_date
 from utils.helper import _strdate_to_int
 from utils.helper import _date_to_int
 from utils.helper import _intdate_to_str
+from utils.helper import _converter_datas_dict
 from utils.helper import ServerException
 # Importa o módulo de log
 import logging
@@ -81,7 +82,9 @@ class BancoCentral(BaseObject):
             
             # TODO: Tratar campos retornados para os tipos de dados adequados
             # Ordena lista de obtidas da API
-            indices = sorted(response.json(), key = lambda campo: _strdate_to_int(campo['data'], '%d/%m/%Y'))
+            datas_converter = {'data':'%d/%m/%Y'}
+            indices = list(map(lambda item: _converter_datas_dict(item, datas_converter), response.json()))
+            indices = sorted(indices, key = lambda campo: campo['data'])
 
         except Exception as e:
             raise ServerException(e)

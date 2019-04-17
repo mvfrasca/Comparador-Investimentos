@@ -272,7 +272,7 @@ def list_indices(id):
         mensagem  = "Você deve informar a data inicial do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
         raise InputException('dataInicial', mensagem)
     elif _is_date(queryParameters.get('dataInicial'), '%Y-%m-%d') == False:
-        mensagem  = "Data inicial do período inválida. Formato esperado: DD/MM/AAAA"
+        mensagem  = "Data inicial do período inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataInicial', mensagem)
     else:
         dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d")
@@ -282,7 +282,7 @@ def list_indices(id):
         mensagem  = "Você deve informar a data final do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
         raise InputException('dataFinal', mensagem)
     elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
-        mensagem  = "Data final do período inválida. Formato esperado: DD/MM/AAAA"
+        mensagem  = "Data final do período inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataFinal', mensagem)
     else:
         dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d")

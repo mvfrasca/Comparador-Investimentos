@@ -124,7 +124,7 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
         # Converte o campo data para datetime
         item[atributo] = datetime.strptime(item[atributo], formato)
         # Converte a data para o formato inteiro esperado YYYYMMDD
-        item[atributo] = int(datetime.strftime(item[atributo]), "%Y%m%d")
+        item[atributo] = int(datetime.strftime(item[atributo], "%Y%m%d"))
 
     return item
 
@@ -142,7 +142,7 @@ def _strdate_to_int(data: str, mascara_entrada: str):
         # Converte o campo data para datetime
         date = datetime.strptime(data, mascara_entrada)
         # Converte a data para o formato inteiro esperado YYYYMMDD
-        intdate = int(datetime.strftime(date), "%Y%m%d")
+        intdate = int(datetime.strftime(date, "%Y%m%d"))
         return intdate
     except:
         pass
@@ -161,7 +161,7 @@ def _strdate_to_int(data: str, mascara_entrada: str):
         # Converte o campo data para datetime
         date = datetime.strptime(data, mascara_entrada)
         # Converte a data para o formato inteiro esperado YYYYMMDD
-        intdate = int(datetime.strftime(date), "%Y%m%d")
+        intdate = int(datetime.strftime(date, "%Y%m%d"))
         return intdate
     except:
         pass
@@ -177,7 +177,7 @@ def _date_to_int(data: datetime):
     """
     try:
         # Converte a data para o formato inteiro esperado YYYYMMDD
-        intdate = int(datetime.strftime(data), "%Y%m%d")
+        intdate = int(datetime.strftime(data, "%Y%m%d"))
         return intdate
     except:
         pass
@@ -194,9 +194,9 @@ def _intdate_to_str(data: int, mascara_saida: str):
     """
     try:
         # Converte o campo data para datetime
-        date = datetime.strptime(data, "%Y%m%d")
-        # Converte a data para o formato inteiro esperado YYYYMMDD
-        strdate = int(datetime.strftime(date), mascara_saida)
+        date = datetime.strptime(str(data), "%Y%m%d")
+        # Converte a data para o formato de saída solicitado
+        strdate = datetime.strftime(date, mascara_saida)
         return strdate
     except:
         pass
