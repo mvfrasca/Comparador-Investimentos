@@ -18,6 +18,10 @@ from flask import current_app
 from google.cloud import datastore
 # Importa classe para Enumeradores
 from enum import Enum
+# Importa módulo para tratamento de data/hora
+from datetime import datetime
+# Importanto módulo para tratamento de números decimais
+from decimal import Decimal, getcontext
 
 builtin_list = list
 
@@ -35,14 +39,14 @@ def get_client():
     # return datastore.Client(current_app.config['PROJECT_ID'])
     return datastore.Client()
 
-def list_indexadores(dt_referencia=None):
+def list_indexadores(dt_referencia :datetime=None):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
     query = ds.query(kind=TipoEntidade.INDEXADORES.value)
     # Inclui filtros da consulta caso passados
     if dt_referencia is not None:
-        query.add_filter('dt_ult_referencia','<', dt_referencia)
+        query.add_filter('dt_ult_referencia','<', dt_referencia.isoformat())
     #Define ordenação da consulta
     query.order = ['dt_ult_referencia']
     # Executa a consulta e armazena num dictionary 
@@ -53,23 +57,25 @@ def list_indexadores(dt_referencia=None):
     
     return entities
 
-def list_indices(indexador, dataInicial, dataFinal):
+def list_indices(indexador :str, dataInicial :datetime, dataFinal : datetime):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
     query = ds.query(kind=TipoEntidade.INDICES.value)
     # Inclui filtros da consulta
     query.add_filter('tp_indice','=',indexador)
-    query.add_filter('dt_referencia','>=', dataInicial)
-    query.add_filter('dt_referencia','<=', dataFinal)
+    query.add_filter('dt_referencia','>=', dataInicial.isoformat())
+    query.add_filter('dt_referencia','<=', dataFinal.isoformat())
     #Define ordenação da consulta
     query.order = ['dt_referencia']
     # Executa a consulta e armazena num dictionary 
     indices = list(query.fetch())
     # TODO: Veificar se é necessário utilizar o método from_datastore()
     print(indices)
+    # Trata os formatos retornados da lista de entidades
+    indices = list(map(lambda e: _tratar_formatos(e), indices))
+    print(indices)
     return indices
-
 
 # def insert_indices():
 #      # Obtém uma chave para inclusão do novo índice
@@ -82,7 +88,7 @@ def list_indices(indexador, dataInicial, dataFinal):
 #     # Insere o novo índice
 #     datastore_client.put(indice)
 
-def from_datastore(entity):
+def from_datastore(entity: datastore.Entity):
     """Converte os resultados do Google Datastore no formato esperado (dictionary).
     Exemplo:
     Datastore tipicamente retorna:
@@ -97,6 +103,8 @@ def from_datastore(entity):
         entity = entity.pop()
 
     entity['id'] = entity.key.name
+    entity = _tratar_formatos(entity)
+
     return entity
 
 def read(kind: TipoEntidade, id: str):
@@ -105,7 +113,6 @@ def read(kind: TipoEntidade, id: str):
     results = ds.get(key)
     return from_datastore(results)
 
-# [START update]
 def update(kind: TipoEntidade, data: list, id: str = None):
     ds = get_client()
     if id:
@@ -131,9 +138,8 @@ def delete(kind: TipoEntidade, id: str):
     ds = get_client()
     key = ds.key(kind.value, id)
     ds.delete(key)
+    return key
 
-
-# [START update]
 def update_multi(kind: TipoEntidade, lista: list):
     ds = get_client()
     entities = []
@@ -163,3 +169,23 @@ def update_multi(kind: TipoEntidade, lista: list):
 #         if query_iterator.next_page_token else None)
 
 #     return entities, next_cursor
+
+def _tratar_formatos(entidade: dict):
+    """Converte os atributos de uma entidade nos tipos de dados esperados pela aplicação.
+
+    Argumentos:
+        entidade: dictionary que contém os atributos de uma entidade cujos atributos terão 
+        os tipos de dados convertidos.
+    Retorno:
+        entidade com os tipos de dados convertidos.
+    """
+    # Varre o dicionário de nomes e formatos
+    for atributo in entidade.items():
+        # Tratamento de campos data
+        if atributo.startswith('dt_'):
+            # Converte o campo data para datetime
+            entidade[atributo] = datetime.fromisoformat(entidade[atributo])
+        if atributo.startswith('val_'):
+            entidade[atributo] = Decimal(entidade[atributo])
+
+    return entidade

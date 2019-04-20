@@ -1,3 +1,4 @@
+#gcloud app deploy cron.yaml
 cron:
 - description: "Job de atualização dos índices referentes aos indicadores cadastrados: 08:00"
   url: /api/indexadores/all/indices
