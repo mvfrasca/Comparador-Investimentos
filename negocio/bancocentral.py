@@ -28,7 +28,7 @@ class BancoCentral(BaseObject):
     def __init__(self):
        pass
     
-    def list_indices(self, serie: str, dataInicial: int, dataFinal: int):
+    def list_indices(self, serie: str, dataInicial: datetime, dataFinal: datetime):
         """Acessa a API do Banco Central e retorna os índices referentes à série e período informados.
 
         Argumentos:
@@ -66,8 +66,8 @@ class BancoCentral(BaseObject):
         # https://api.bcb.gov.br/dados/serie/bcdata.sgs.196/dados?formato=json&dataInicial=01/01/2018&dataFinal=26/08/2018
         try:
             # Formatando datas com o formato string esperado pela API
-            dataInicial = _intdate_to_str(dataInicial, "%d/%m/%Y")
-            dataFinal = _intdate_to_str(dataFinal, "%d/%m/%Y")
+            dataInicial = datetime.strftime(dataInicial, "%d/%m/%Y")
+            dataFinal = datetime.strftime(dataFinal, "%d/%m/%Y")
             # Montando a API
             urlAPI = 'http://api.bcb.gov.br/dados/serie/bcdata.sgs.{0}/dados?formato=json&dataInicial={1}&dataFinal={2}'.format(serie,dataInicial,dataFinal)
             logger.info('Chamada à API de índices: {}'.format(urlAPI))   

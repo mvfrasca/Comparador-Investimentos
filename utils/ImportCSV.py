@@ -17,7 +17,6 @@ with open('feriados.csv', 'r') as ficheiro:
         key = ds.key("Feriados", id)
         #dados = {"id": id, "data": data, "descricao": linha[2]}
         dados = {"id": id, "int_dt_feriado": id, "descricao": linha[2]}
-
         entity = datastore.Entity(key=key)
         entity.update(dados)
         ds.put(entity)

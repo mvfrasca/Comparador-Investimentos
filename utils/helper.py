@@ -3,6 +3,8 @@ import os
 from flask import jsonify
 # Importa módulo para tratamento de data/hora
 from datetime import datetime, timezone
+# Importanto módulo para tratamento de números decimais
+from decimal import Decimal
 
 # Get variavel de ambiente
 def _variable(name):
@@ -34,7 +36,7 @@ def _error(body, statusCode):
     """
     response = {
         'statusCode': statusCode,
-        'body': body,
+        'body': _tratar_formatos(body),
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -53,7 +55,7 @@ def _success(body, statusCode):
     """
     response =  {
         'statusCode': statusCode,
-        'body': body,
+        'body': _tratar_formatos(body),
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -111,7 +113,7 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
     """Converte os campos de data de um dictionary em datetime.
 
     Argumentos:
-        item: item de um dictionary que contem campos data em formato string a serem convertidos 
+        item: item de um dictionary que contém campos data em formato string a serem convertidos 
         para datetime
         nomes_e_formatos: dictionary contendo os nomes dos nomes dos atributos de data e respectivos formatos a 
         serem convertidos para datetime. Ex.:
@@ -123,8 +125,6 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
     for atributo, formato in nomes_e_formatos.items():
         # Converte o campo data para datetime
         item[atributo] = datetime.strptime(item[atributo], formato)
-        # Converte a data para o formato inteiro esperado YYYYMMDD
-        item[atributo] = int(datetime.strftime(item[atributo], "%Y%m%d"))
 
     return item
 
@@ -200,6 +200,78 @@ def _intdate_to_str(data: int, mascara_saida: str):
         return strdate
     except:
         pass
+
+# Converte um inteiro formatada de data em formato inteiro
+def _intdate_to_datetime(data: int):
+    """Converte inteiro que representa uma data no formato YYYYMMDD em formato datetime
+
+    Argumentos:
+        data: inteiro que representa uma data no formato YYYYMMDD. Ex.: 20181231'
+    Retorno:
+        Data no formato datetime
+    """
+    try:
+        # Converte o campo data para datetime
+        date = datetime.strptime(str(data), "%Y%m%d")
+        return date
+    except:
+        pass
+
+# Tratamento de dados recebidos do banco de dados para os padrões da api
+def _tratar_formatos(dado):
+    """Converte os atributos de um retorno da API nos tipos de dados padrões de resposta da API.
+
+    Argumentos:
+        dados: lista ou dictionary que contém os dados de retorno cujos atributos terão 
+        os tipos de dados convertidos.
+    Retorno:
+        Dados de retorno com tipos de dados dos atributos convertidos.
+    """
+    dado_convertido = None
+    if type(dado) in (str, int):
+        dado_convertido = dado
+    elif type(dado) == datetime:      
+        dado_convertido = dado.isoformat()
+    elif type(dado) == Decimal:
+        dado_convertido = float(dado)
+    elif type(dado) == tuple:
+	    dado_convertido = (dado[0], _tratar_formatos(dado[1]))
+    elif type(dado) == list:
+        dado_convertido = list(map(_tratar_formatos, dado))
+    elif type(dado) == dict:
+        dado_convertido = dict(map(_tratar_formatos, dado.items()))
+    else:
+        dado_convertido = dado
+    
+    return dado_convertido
+
+# Tratamento de dados recebidos do banco de dados para os padrões da api
+def _tratar_formato(atributo):
+    """Converte o tipo de dado do atributo para o tipo de dados padrão de resposta da API.
+
+    Argumentos:
+        atributo: atributo cujo tipo de dado será convertido.
+    Retorno:
+        atributo com o tipo de dado convertido.
+    """
+    if type(atributo) == datetime:
+        atributo = atributo.isoformat()
+    elif type(atributo) == Decimal:
+        atributo = float(atributo)
+    
+    return atributo
+            
+
+    # Varre os atributos da entidade
+    for atributo in entidade.items():
+        # Tratamento de campos data
+        if atributo.startswith('dt_'):
+            # Converte o campo data para datetime
+            entidade[atributo] = datetime.fromisoformat(entidade[atributo])
+        if atributo.startswith('val_'):
+            entidade[atributo] = Decimal(entidade[atributo])
+
+    return entidade
 
 class InputException(Exception):
     """Exceção disparada nos casos argumentos de entrada inválidos.

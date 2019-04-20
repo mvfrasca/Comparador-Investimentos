@@ -16,6 +16,10 @@ from utils.helper import _variable
 from utils.helper import _clean_attributes
 from utils.helper import _is_number
 from utils.helper import _is_date
+from utils.helper import _converter_datas_dict
+from utils.helper import _strdate_to_int
+from utils.helper import _date_to_int
+from utils.helper import _intdate_to_str
 from utils.helper import InputException
 from utils.helper import BusinessException
 from utils.helper import ServerException
@@ -54,8 +58,8 @@ def calcular_investimento():
     
     # Loga os estado atual do indexador
     logger.info("Parâmetros recebidos para cálculo do investimento: {}".format(queryParameters))
-    # Define a precisão da classe Decimal para 7 casas decimais
-    getcontext().prec = 7
+    # Define a precisão da classe Decimal para 9 casas decimais
+    getcontext().prec = 9
     # ------------------------------------------------------------------------------ #
     # Resgata e valida os dados de entrada para cálculo da evolução do investimento
     # ------------------------------------------------------------------------------ #
@@ -99,7 +103,7 @@ def calcular_investimento():
 
     # Validação - dataInicial
     if 'dataInicial' not in queryParameters:
-        mensagem  = "Você deve informar a data inicial do investimento. Formato esperado: DD/MM/AAAA"
+        mensagem  = "Você deve informar a data inicial do investimento. Formato esperado: AAAA-MM-DD"
         raise InputException('dataInicial', mensagem)
     elif _is_date(queryParameters.get('dataInicial'), "%Y-%m-%d") == False:
         mensagem  = "Data inicial do investimento inválida. Formato esperado: AAAA-MM-DD"
@@ -109,7 +113,7 @@ def calcular_investimento():
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
-        # mensagem  = "Você deve informar a data final do investimento. Formato esperado: DD/MM/AAAA"
+        # mensagem  = "Você deve informar a data final do investimento. Formato esperado: AAAA-MM-DD"
         # raise InputException('dataFinal', mensagem)
         # Quando não informada assumir data atual
         dataFinal = datetime.now()
@@ -153,7 +157,7 @@ def post_indexadores():
     except Exception as e:
         raise ServerException(e)
     else:
-        return _success({ 'mensagem': 'Indexadores incluidos com sucesso!' }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
+        return _success({ 'mensagem': 'Indexadores incluidos/atualizados com sucesso!' }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/feriados', methods=['POST'])
 def post_feriados():
@@ -210,6 +214,8 @@ def list_indexadores():
         objGestaoCadastro = GestaoCadastro()
         # Obtém a lista de indexadores cadastrados
         indexadores = objGestaoCadastro.list_indexadores()
+        #
+        # indexadores = list(map(lambda item: _converter_datas_dict(item, datas_converter), indexadores))
     except BusinessException as be:
         raise be
     except Exception as e:
@@ -247,7 +253,7 @@ def get_indexador(id):
 def list_indices(id):
     """Retorna lista de índices referente ao indexador e período solicitado
 
-    Argumentos:
+    Argumentos path:
         indexador: código do indexador. Ex.: ipca, poupanca, cdi.
     Argumentos Query string:
         dataInicial: data inicial do período de índices a ser consultado.
@@ -269,7 +275,7 @@ def list_indices(id):
 
     # Validação - dataInicial
     if 'dataInicial' not in queryParameters:
-        mensagem  = "Você deve informar a data inicial do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
+        mensagem  = "Você deve informar a data inicial do período de índices a serem retornados. Formato esperado: AAAA-MM-DD"
         raise InputException('dataInicial', mensagem)
     elif _is_date(queryParameters.get('dataInicial'), '%Y-%m-%d') == False:
         mensagem  = "Data inicial do período inválida. Formato esperado: AAAA-MM-DD"
@@ -279,7 +285,7 @@ def list_indices(id):
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
-        mensagem  = "Você deve informar a data final do período de índices a serem retornados. Formato esperado: DD/MM/AAAA"
+        mensagem  = "Você deve informar a data final do período de índices a serem retornados. Formato esperado: AAAA-MM-DD"
         raise InputException('dataFinal', mensagem)
     elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
         mensagem  = "Data final do período inválida. Formato esperado: AAAA-MM-DD"

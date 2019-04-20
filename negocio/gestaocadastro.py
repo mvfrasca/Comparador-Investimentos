@@ -51,50 +51,11 @@ class GestaoCadastro(BaseObject):
             indexadores = list(map(lambda item: _converter_datas_dict(item, datas_converter), indexadores))
             # Loga os estado atual do indicador
             logger.info("Carga inicial de indexadores")
-            logger.info('indexadores = {}'.format(indexadores))
             # Inclui/atualiza a base de dados com os indexadores
             tipoEntidade = get_model().TipoEntidade.INDEXADORES
             get_model().update_multi(tipoEntidade, indexadores)
 
         return
-        # keys = []
-        # # Poupança
-        # indexador = {}
-        # indexador.update({'nome': 'Poupança'})
-        # indexador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-        # indexador.update({'periodicidade': 'mensal'})
-        # indexador.update({'serie': '196'})
-        # indexador.update({'qtd_regs_ult_atualiz': 0})
-        # key = get_model().create('Indexadores', indexador, 'poupanca')
-        # keys.append({key})
-        # print(indexador)
-        # # IPCA
-        # indexador = {}
-        # indexador.update({'nome': 'IPCA'})
-        # indexador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-        # indexador.update({'periodicidade': 'mensal'})
-        # indexador.update({'serie': '433'})
-        # indexador.update({'qtd_regs_ult_atualiz': 0})
-        # key = get_model().create('Indexadores', indexador, 'ipca')
-        # keys.append({key})
-        # # CDI
-        # indexador = {}
-        # indexador.update({'nome': 'CDI'})
-        # indexador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-        # indexador.update({'periodicidade': 'diario'})
-        # indexador.update({'serie': '12'})
-        # indexador.update({'qtd_regs_ult_atualiz': 0})
-        # key = get_model().create('Indexadores', indexador, 'cdi')
-        # keys.append({key})
-        # # SELIC
-        # indexador = {}
-        # indexador.update({'nome': 'SELIC'})
-        # indexador.update({'dt_ult_referencia': datetime.strptime('01/01/1900', "%d/%m/%Y")})
-        # indexador.update({'periodicidade': 'diario'})
-        # indexador.update({'serie': '12'})
-        # indexador.update({'qtd_regs_ult_atualiz': 0})
-        # key = get_model().create('Indexadores', indexador, 'selic')
-        # keys.append({key})
     
     def criar_feriados(self):
         """Realiza a carga inicial das entidades que representarão os feriados bancários.
@@ -109,7 +70,7 @@ class GestaoCadastro(BaseObject):
             
             for linha in reader:
                 # Recupera atributo data da linha do arquivo e formata com padrão de data inteiro
-                dt_feriado = _strdate_to_int(linha[0], "%d/%m/%Y")
+                dt_feriado = datetime.strptime(linha[0], "%d/%m/%Y")
                 # Prepara o dicionário com os atributos da entidade feriado
                 feriado = {'id': dt_feriado, 'dt_feriado': dt_feriado, 'descricao': linha[2]}
                 feriados.append(feriado)
@@ -122,7 +83,7 @@ class GestaoCadastro(BaseObject):
 
         return len(feriados)
 
-    def list_indexadores(self, dataReferencia: int=None):
+    def list_indexadores(self, dataReferencia: datetime=None):
         """Obtém a lista de indexadores disponíveis cuja data de última atualização é anterior ao argumento dataReferencia.
         
         Argumentos:
@@ -144,7 +105,7 @@ class GestaoCadastro(BaseObject):
         tipoEntidade = get_model().TipoEntidade.INDEXADORES
         return get_model().read(tipoEntidade, id.lower())
     
-    def list_indices(self, indexador: str, dataInicial: int, dataFinal: int ):
+    def list_indices(self, indexador: str, dataInicial: datetime, dataFinal: datetime ):
         """Retorna o indexador de acordo com o id solicitado
 
         Argumentos:
@@ -165,8 +126,7 @@ class GestaoCadastro(BaseObject):
         try:
             # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
             # zerados caso contrário datastore não reconhece)
-            #dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
-            dataAtual = _date_to_int(datetime.now())
+            dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
             # Inicializa o contador geral de registros atualizados
             contadorTotal = 0
             # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à data atual)

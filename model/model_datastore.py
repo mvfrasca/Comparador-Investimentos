@@ -69,43 +69,12 @@ def list_indices(indexador :str, dataInicial :datetime, dataFinal : datetime):
     #Define ordenação da consulta
     query.order = ['dt_referencia']
     # Executa a consulta e armazena num dictionary 
-    indices = list(query.fetch())
-    # TODO: Veificar se é necessário utilizar o método from_datastore()
-    print(indices)
+    # indices = list(query.fetch())
+    indices = query.fetch()
     # Trata os formatos retornados da lista de entidades
-    indices = list(map(lambda e: _tratar_formatos(e), indices))
-    print(indices)
+    # indices = list(map(lambda e: _tratar_formatos(e), indices))
+    indices = builtin_list(map(from_datastore, indices))
     return indices
-
-# def insert_indices():
-#      # Obtém uma chave para inclusão do novo índice
-#     chave_indice = datastore_client.key('Indices')
-#     # Prepara a nova entidade instanciando-a 
-#     indice = datastore.Entity(key=chave_indice)
-#     # Define o valor da(s) propriedade(s) da entidade
-#     indice['dt_referencia'] = ano_mes
-#     indice['val_indice'] = val_indice
-#     # Insere o novo índice
-#     datastore_client.put(indice)
-
-def from_datastore(entity: datastore.Entity):
-    """Converte os resultados do Google Datastore no formato esperado (dictionary).
-    Exemplo:
-    Datastore tipicamente retorna:
-        [Entity{key: (kind, id), prop: val, ...}]
-
-    Este método retornará:
-        {id: id, prop: val, ...}
-    """
-    if not entity:
-        return None
-    if isinstance(entity, builtin_list):
-        entity = entity.pop()
-
-    entity['id'] = entity.key.name
-    entity = _tratar_formatos(entity)
-
-    return entity
 
 def read(kind: TipoEntidade, id: str):
     ds = get_client()
@@ -113,24 +82,11 @@ def read(kind: TipoEntidade, id: str):
     results = ds.get(key)
     return from_datastore(results)
 
-def update(kind: TipoEntidade, data: list, id: str = None):
+def update(kind: TipoEntidade, data: dict, id: str = None):
     ds = get_client()
-    if id:
-        key = ds.key(kind.value, id)
-    else:
-        key = ds.key(kind.value)
-
-    # entity = datastore.Entity(
-    #     key=key) ,
-    #     exclude_from_indexes=['description'])
-        
-    entity = datastore.Entity(key=key)
-
-    entity.update(data)
-    ds.put(entity)
-    
-    #return from_datastore(entity)
-    return key
+    entidade = to_datastore(ds, kind, data)
+    ds.put(entidade)
+    return
 
 create = update
 
@@ -142,18 +98,12 @@ def delete(kind: TipoEntidade, id: str):
 
 def update_multi(kind: TipoEntidade, lista: list):
     ds = get_client()
-    entities = []
+    entidades = []
     for item in lista:
-        key = ds.key(kind.value, item['id'])
-        entity = datastore.Entity(key=key)
-        entity.update(item)
-        entities.append(entity)
-    
-    ds.put_multi(entities)
-    
-    #return from_datastore(entity)
+        entidade = to_datastore(ds, kind, item)
+        entidades.append(entidade)
+    ds.put_multi(entidades)
     return
-
 
 # Lista com paginação
 # def list(limit=10, cursor=None):
@@ -170,8 +120,34 @@ def update_multi(kind: TipoEntidade, lista: list):
 
 #     return entities, next_cursor
 
+#######################################################################################################
+# Funções auxiliares para tratamento dos dados retornados do banco de dados ou a serem consistidos 
+# no banco de dados
+#######################################################################################################
+
+# Tratamento de dados recebidos do banco de dados para os padrões da api
+def from_datastore(entity):
+    """Converte os resultados do Google Datastore no formato esperado (dictionary).
+    Exemplo:
+    Datastore tipicamente retorna:
+        [Entity{key: (kind, id), prop: val, ...}]
+
+    Este método retornará:
+        {id: id, prop: val, ...}
+    """
+    if not entity:
+        return None
+    if isinstance(entity, builtin_list):
+        entity = entity.pop()
+    
+    entity['id'] = entity.key.name
+    entity = _tratar_formatos(entity.copy())
+
+    return entity
+
+# Tratamento de dados recebidos do banco de dados para os padrões da api
 def _tratar_formatos(entidade: dict):
-    """Converte os atributos de uma entidade nos tipos de dados esperados pela aplicação.
+    """Converte os atributos de uma entidade nos tipos de dados esperados pela API.
 
     Argumentos:
         entidade: dictionary que contém os atributos de uma entidade cujos atributos terão 
@@ -179,8 +155,10 @@ def _tratar_formatos(entidade: dict):
     Retorno:
         entidade com os tipos de dados convertidos.
     """
-    # Varre o dicionário de nomes e formatos
-    for atributo in entidade.items():
+    # Define a precisão da classe Decimal para 9 casas decimais
+    getcontext().prec = 9
+    # Varre os atributos da entidade
+    for atributo in entidade.keys():
         # Tratamento de campos data
         if atributo.startswith('dt_'):
             # Converte o campo data para datetime
@@ -189,3 +167,37 @@ def _tratar_formatos(entidade: dict):
             entidade[atributo] = Decimal(entidade[atributo])
 
     return entidade
+
+# Tratamento de dados a serem consistidos no banco de dados
+def to_datastore(ds: datastore.Client, kind: TipoEntidade, entidade: dict):
+    """Converte os dados a serem gravados do Google Datastore para o formato padronizado de cada tipo de campo.
+
+    Retorno:
+        Entidade do Google Datastore.
+    """
+    if not entidade:
+        return None
+    elif type(entidade) != dict:
+        entidade = entidade.__dict__
+
+    # Varre os atributos da entidade atualizando os padrões de tipos de dados
+    for atributo in entidade.keys():
+        if atributo == 'id':
+            key = ds.key(kind.value, entidade['id'])
+        # Tratamento de campos data
+        elif atributo.startswith('dt_'):
+            # Converte o campo datatime para string no padrão ISO
+            entidade[atributo] = entidade[atributo].isoformat()
+
+    # Se entidade não possuia campo 'id' gera chave automática do datastore
+    if not key:
+        key = ds.key(kind.value)
+    # entity = datastore.Entity(
+    #     key=key) ,
+    #     exclude_from_indexes=['description'])
+    # Cria uma entidade com a chave obtida
+    entity = datastore.Entity(key=key)
+    # Atualiza a entidade com os atributos recebidos no dictionary
+    entity.update(entidade)
+
+    return entity

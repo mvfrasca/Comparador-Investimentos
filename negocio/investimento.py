@@ -9,6 +9,13 @@ from negocio.baseobject import BaseObject
 from negocio.gestaocadastro import GestaoCadastro
 # Import o módulo para cálculos matemáticos
 import math
+# Importa o módulo Helper
+import utils.helper
+from utils.helper import _converter_datas_dict
+from utils.helper import _strdate_to_int
+from utils.helper import _date_to_int
+from utils.helper import _intdate_to_str
+from utils.helper import _intdate_to_datetime
 
 class Investimento(BaseObject):
     """Classe que representa um Investimento.
@@ -22,14 +29,14 @@ class Investimento(BaseObject):
     """
     # Método criador 
     def __init__(self, tipoInvestimento: str, valInvestimentoInicial: Decimal, indexador: str, taxa: Decimal, dataInicial: datetime, dataFinal: datetime):
-        # Define a precisão para 7 casas decimais
-        getcontext().prec = 17
+        # Define a precisão para 9 casas decimais
+        getcontext().prec = 9
         # Atualiza os atributos com os valores informados na instanciação da classe
         self.tipoInvestimento = tipoInvestimento
         self.valInvestimentoInicial = Decimal(valInvestimentoInicial)
         self.indexador = indexador
         self.taxa = Decimal(taxa)
-        self.dataInicial = dataInicial 
+        self.dataInicial = dataInicial
         self.dataFinal = dataFinal
         # Inicializa demais atributos da classe
         self.valSaldoBruto = Decimal(0)
@@ -53,8 +60,8 @@ class Investimento(BaseObject):
             de saldo e rentabilidade do investimento além de uma sublista 
             da evolução do valor inicial em função do tempo (período informado)
         """
-        # Define a precisão para 7 casas decimais
-        getcontext().prec = 17
+        # Define a precisão para 9 casas decimais
+        getcontext().prec = 9
         getcontext().rounding = ROUND_HALF_UP
 
         # Inicializa o valor de investimento atualizado onde serão aplicados índices por período
@@ -75,7 +82,7 @@ class Investimento(BaseObject):
         # índice (diariamente ou mensalmente)
         for indice in indices:
             # Formata a data de referência
-            data = datetime.strftime(indice['dt_referencia'], "%Y-%m-%d")
+            data = indice['dt_referencia']
             # Formata o valor do índice
             valIndice = indice['val_indice']
             valIndice = Decimal(valIndice)
@@ -116,8 +123,8 @@ class Investimento(BaseObject):
         resultadoInvestimento.update({'indexador': self.indexador})
         resultadoInvestimento.update({'taxa': float(self.taxa)})
         resultadoInvestimento.update({'valInvestimentoInicial': float(self.valInvestimentoInicial)})
-        resultadoInvestimento.update({'dataInicial': datetime.strftime(self.dataInicial, "%Y-%m-%d")})
-        resultadoInvestimento.update({'dataFinal': datetime.strftime(self.dataFinal, "%Y-%m-%d")})
+        resultadoInvestimento.update({'dataInicial': self.dataInicial})
+        resultadoInvestimento.update({'dataFinal': self.dataFinal})
         resultadoInvestimento.update({'valSaldoBruto': float(self.valSaldoBruto)})
         resultadoInvestimento.update({'rentabilidadeBruta': float(self.rentabilidadeBruta)})
         resultadoInvestimento.update({'percImpostoRenda': float(self.percImpostoRenda)})
@@ -155,11 +162,11 @@ class Investimento(BaseObject):
             Retorna um decimal representando o percentual de IR a ser aplicado sob o rendimento
             do investimento.
         """
-        # Define a precisão para 7 casas decimais
-        getcontext().prec = 17
+        # Define a precisão para 9 casas decimais
+        getcontext().prec = 9
         percIR = Decimal(0)
 
-        # TODO: criar entidade no banco de dados com os intervalos e respectivos % para flixibilizar 
+        # TODO: criar entidade no banco de dados com os intervalos e respectivos % para flexibilizar 
         # manutenção dos intervalos e %s
         if qtdDiasCorridos <= 180:
             percIR = 22.5
