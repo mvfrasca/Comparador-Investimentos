@@ -2,47 +2,47 @@
     {
         "id": "poupanca",
         "nome": "Poupança",
-        "dt_ult_referencia": "01/01/1900",
+        "dt_ult_referencia": "31/12/2000",
         "periodicidade": "Mensal",
         "serie": "196",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "31/12/2000"
     },
     {
         "id": "ipca",
         "nome": "IPCA",
-        "dt_ult_referencia": "01/01/1900",
+        "dt_ult_referencia": "31/12/2000",
         "periodicidade": "Mensal",
         "serie": "433",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "31/12/2000"
 
     },
     {
         "id": "cdi",
         "nome": "CDI",
-        "dt_ult_referencia": "01/01/1900",
+        "dt_ult_referencia": "31/12/2000",
         "periodicidade": "Diário",
         "serie": "12",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "31/12/2000"
     },
     {
         "id": "selic",
         "nome": "SELIC",
-        "dt_ult_referencia": "01/01/1900",
+        "dt_ult_referencia": "31/12/2000",
         "periodicidade": "Diário",
         "serie": "11",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "31/12/2000"
     },
     {
         "id": "igpm",
         "nome": "IGPM",
-        "dt_ult_referencia": "01/01/1900",
+        "dt_ult_referencia": "31/12/2000",
         "periodicidade": "Mensal",
         "serie": "189",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "31/12/2000"
     }
 ]

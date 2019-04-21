@@ -224,7 +224,7 @@ def list_indexadores():
 
 @api.route('/indexadores/all', methods=['OPTIONS'])
 def indexadores_options (self):
-    return {'Allow' : 'GET' }, 200, \
+    return {'Allow' : 'GET' }, [200,400,500], \
     { 'Access-Control-Allow-Origin': '*', \
     'Access-Control-Allow-Methods' : 'GET' }
     
