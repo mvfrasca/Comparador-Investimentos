@@ -113,7 +113,7 @@ def calcular_investimento():
         # mensagem  = "Você deve informar a data final do investimento. Formato esperado: AAAA-MM-DD"
         # raise InputException('dataFinal', mensagem)
         # Quando não informada assumir data atual
-        dataFinal = datetime.now()
+        dataFinal = datetime.now().date()
     elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
         mensagem  = "Data final do investimento inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataFinal', mensagem)
@@ -134,7 +134,7 @@ def calcular_investimento():
 
 @api.route('/investimento', methods=['OPTIONS'])
 def investimento_options (self):
-    return {'Allow' : 'GET' }, [200,400], \
+    return {'Allow' : 'GET' }, [200,400,500], \
     { 'Access-Control-Allow-Origin': '*', \
     'Access-Control-Allow-Methods' : 'GET' }
 
@@ -148,7 +148,7 @@ def post_indexadores():
         # Instancia o a classe de negócio GestaoCadastro
         objGestaoCadastro = GestaoCadastro()
         # Realiza a carga inicial dos indexadores
-        objGestaoCadastro.criar_indexadores()
+        objGestaoCadastro.put_indexadores()
     except BusinessException as be:
         raise be
     except Exception as e:
@@ -165,8 +165,8 @@ def post_feriados():
     try:
         # Instancia o a classe de negócio GestaoCadastro
         objGestaoCadastro = GestaoCadastro()
-        # Realiza a carga inicial dos indexadores
-        qtdFeriados = objGestaoCadastro.criar_feriados()
+        # Realiza a carga inicial / recarrega indexadores
+        qtdFeriados = objGestaoCadastro.put_feriados()
     except BusinessException as be:
         raise be
     except Exception as e:
@@ -199,7 +199,7 @@ def atualizar_indices():
         mensagem = "Índices atualizados com sucesso! Total de {} registro(s) atualizado(s).".format(contadorTotal)
 
     resposta = {'mensagem': mensagem}
-    resposta.update({'indexadores': objGestaoCadastro.list_indexadores()})
+    resposta.update({'indexadores': objGestaoCadastro.get_indexadores()})
     return _success(resposta, statusCode), statusCode, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/all', methods=['GET'])
@@ -210,8 +210,7 @@ def list_indexadores():
         # Instancia a classe de negócios responsável pela gestão de cadastros da API
         objGestaoCadastro = GestaoCadastro()
         # Obtém a lista de indexadores cadastrados
-        indexadores = objGestaoCadastro.list_indexadores()
-        #
+        indexadores = objGestaoCadastro.get_indexadores()
         # indexadores = list(map(lambda item: _converter_datas_dict(item, datas_converter), indexadores))
     except BusinessException as be:
         raise be

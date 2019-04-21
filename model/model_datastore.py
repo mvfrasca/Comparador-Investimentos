@@ -32,6 +32,14 @@ class TipoEntidade(Enum):
     INDICES = 'Indices'
     FERIADOS = 'Feriados'
 
+    @classmethod
+    def values(cls):
+        lista = []
+        for item in cls.__members__.values():
+	        lista.append(item.value)
+        lista.sort()
+        return lista
+
 def init_app(app):
     pass
 
@@ -39,7 +47,7 @@ def get_client():
     # return datastore.Client(current_app.config['PROJECT_ID'])
     return datastore.Client()
 
-def list_indexadores(dt_referencia :datetime=None):
+def list_indexadores(dt_referencia :datetime.date=None, tipo_atualizacao: str=None):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
@@ -47,6 +55,8 @@ def list_indexadores(dt_referencia :datetime=None):
     # Inclui filtros da consulta caso passados
     if dt_referencia is not None:
         query.add_filter('dt_ult_referencia','<', dt_referencia.isoformat())
+    if tipo_atualizacao is not None:
+        query.add_filter('tipo_atualizacao','=', tipo_atualizacao)
     #Define ordenação da consulta
     query.order = ['dt_ult_referencia']
     # Executa a consulta e armazena num dictionary 
@@ -57,7 +67,7 @@ def list_indexadores(dt_referencia :datetime=None):
     
     return entities
 
-def list_indices(indexador :str, dataInicial :datetime, dataFinal : datetime):
+def list_indices(indexador :str, dataInicial :datetime.date, dataFinal : datetime.date):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA

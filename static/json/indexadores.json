@@ -2,47 +2,82 @@
     {
         "id": "poupanca",
         "nome": "Poupança",
-        "dt_ult_referencia": "31/12/2000",
+        "dt_ult_referencia": "01/01/2001",
         "periodicidade": "Mensal",
+        "tipo_atualizacao": "automatica",
         "serie": "196",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "31/12/2000"
+        "dth_ult_atualiz": "01/01/2001"
+    },
+    {
+        "id": "poupanca-diario",
+        "nome": "Poupança Diário",
+        "dt_ult_referencia": "01/01/2001",
+        "periodicidade": "Diário",
+        "tipo_atualizacao": "calculada",
+        "qtd_regs_ult_atualiz": 0,
+        "dth_ult_atualiz": "01/01/2001"
+
     },
     {
         "id": "ipca",
         "nome": "IPCA",
-        "dt_ult_referencia": "31/12/2000",
+        "dt_ult_referencia": "01/01/2001",
         "periodicidade": "Mensal",
+        "tipo_atualizacao": "automatica",
         "serie": "433",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "31/12/2000"
+        "dth_ult_atualiz": "01/01/2001"
+
+    },
+    {
+        "id": "ipca-diario",
+        "nome": "IPCA Diário",
+        "dt_ult_referencia": "01/01/2001",
+        "periodicidade": "Diário",
+        "tipo_atualizacao": "calculada",
+        "qtd_regs_ult_atualiz": 0,
+        "dth_ult_atualiz": "01/01/2001"
 
     },
     {
         "id": "cdi",
         "nome": "CDI",
-        "dt_ult_referencia": "31/12/2000",
+        "dt_ult_referencia": "01/01/2001",
         "periodicidade": "Diário",
+        "tipo_atualizacao": "automatica",
         "serie": "12",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "31/12/2000"
+        "dth_ult_atualiz": "01/01/2001"
     },
     {
         "id": "selic",
         "nome": "SELIC",
-        "dt_ult_referencia": "31/12/2000",
+        "dt_ult_referencia": "01/01/2001",
         "periodicidade": "Diário",
+        "tipo_atualizacao": "automatica",
         "serie": "11",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "31/12/2000"
+        "dth_ult_atualiz": "01/01/2001"
     },
     {
         "id": "igpm",
         "nome": "IGPM",
-        "dt_ult_referencia": "31/12/2000",
+        "dt_ult_referencia": "01/01/2001",
         "periodicidade": "Mensal",
+        "tipo_atualizacao": "automatica",
         "serie": "189",
         "qtd_regs_ult_atualiz": 0,
-        "dth_ult_atualiz": "31/12/2000"
+        "dth_ult_atualiz": "01/01/2001"
+    },
+    {
+        "id": "igpm-diario",
+        "nome": "IGPM Diário",
+        "dt_ult_referencia": "01/01/2001",
+        "periodicidade": "Diário",
+        "tipo_atualizacao": "calculada",
+        "qtd_regs_ult_atualiz": 0,
+        "dth_ult_atualiz": "01/01/2001"
+
     }
 ]

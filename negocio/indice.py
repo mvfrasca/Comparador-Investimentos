@@ -2,20 +2,13 @@
 from decimal import Decimal, getcontext
 # Importa módulo para tratamento de data/hora
 from datetime import datetime
-# Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
-from model import get_model
-# Importa módulo pra tratamento de arquivos json
-import json
-# Importa o módulo Helper
-import utils.helper
-from utils.helper import _converter_datas_dict
 # Importa o módulo de log
 import logging
 # Importa a classe base
 from negocio.baseobject import BaseObject
 
 # Inicializa o objeto para gravação de logs
-logger = logging.getLogger('Classe GestaoCadastro')
+logger = logging.getLogger('Classe Indice')
 logger.setLevel(logging.INFO)
 
 class Indice(BaseObject):
@@ -39,9 +32,6 @@ class Indice(BaseObject):
         self.val_indice = val_indice
         self.dth_inclusao = dth_inclusao
 
-    # @classmethod
-    # def fromDict(lista:dict):
-    #     indice = Indice(tp_indice = lista['tp_indice'], dt_referencia = lista['dt_referencia'], val_indice = lista['val_indice'], dth_inclusao = lista['dth_inclusao'])
 
 
 

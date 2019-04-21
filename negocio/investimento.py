@@ -4,14 +4,18 @@ from decimal import Decimal, getcontext, ROUND_HALF_UP
 from datetime import datetime, timedelta
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
+# Importa classe para Enumeradores
+from enum import Enum
 # Importa a classe base
 from negocio.baseobject import BaseObject
 from negocio.gestaocadastro import GestaoCadastro
+from negocio.indexador import TipoIndexador
 # Import o módulo para cálculos matemáticos
 import math
 # Importa o módulo Helper
 import utils.helper
 from utils.helper import _converter_datas_dict
+from utils.helper import BusinessException
 
 class Investimento(BaseObject):
     """Classe que representa um Investimento.
@@ -56,6 +60,31 @@ class Investimento(BaseObject):
             de saldo e rentabilidade do investimento além de uma sublista 
             da evolução do valor inicial em função do tempo (período informado)
         """
+        # Validação - data inicial mínima
+        if self.dataInicial < datetime(2001, 1, 1).date():
+            mensagem  = "Data inicial do investimento deve ser maior ou igual a 01/01/2001."
+            raise BusinessException('BE001', mensagem)
+        # Validação - período de investimento
+        elif self.dataFinal <= self.dataInicial:
+            mensagem  = "Data final do investimento deve ser maior que a data inicial."
+            raise BusinessException('BE002', mensagem)
+        # Validação - Valor inicial de investimento
+        elif self.valInvestimentoInicial <= Decimal(0):
+            mensagem  = "Valor inicial do investimento deve ser maior que 0 (zero)."
+            raise BusinessException('BE003', mensagem)
+        # Validação - Tipo de investimento inválido
+        elif self.tipoInvestimento.lower() in TipoInvestimento.values():
+            mensagem  = "Tipo de investimento inválido. Tipos esperado: {}.".format(TipoInvestimento.values())
+            raise BusinessException('BE004', mensagem)
+        # Validação - Tipo de indexador inválido
+        elif self.indexador.lower() in TipoIndexador.values():
+            mensagem  = "Tipo de indexador inválido. Tipos esperado: {}.".format(TipoIndexador.values())
+            raise BusinessException('BE005', mensagem)
+        # Validação - Taxa inválida
+        elif self.taxa <= Decimal(0):
+            mensagem  = "Taxa do investimento não pode ser menor que 0 (zero)."
+            raise BusinessException('BE006', mensagem)
+
         # Define a precisão para 9 casas decimais
         getcontext().prec = 9
         getcontext().rounding = ROUND_HALF_UP
@@ -174,3 +203,20 @@ class Investimento(BaseObject):
             percIR = 15
         
         return Decimal(percIR)
+
+# Enum de tipos de investimento - para evitar buscas excessivas no banco dado que não não mudam tanto
+class TipoInvestimento(Enum):
+    ''' Enum que define os tipos das investimentos disponíveis para cálculo
+    '''
+    POUPANCA = 'poupanca'
+    CDB = 'cdb'
+    LCI = 'lci'
+    LCA = 'lca'
+
+    @classmethod
+    def values(cls):
+        lista = []
+        for item in cls.__members__.values():
+	        lista.append(item.value)
+        lista.sort()
+        return lista

@@ -5,6 +5,8 @@ from flask import jsonify
 from datetime import datetime, timezone
 # Importanto módulo para tratamento de números decimais
 from decimal import Decimal
+# Importando tipos das classes de negócio para conversão de dados
+from negocio.baseobject import BaseObject
 
 # Get variavel de ambiente
 def _variable(name):
@@ -36,7 +38,7 @@ def _error(body, statusCode):
     """
     response = {
         'statusCode': statusCode,
-        'body': _tratar_formatos(body),
+        'body': _converter_formatos(body),
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -55,7 +57,7 @@ def _success(body, statusCode):
     """
     response =  {
         'statusCode': statusCode,
-        'body': _tratar_formatos(body),
+        'body': _converter_formatos(body),
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -133,7 +135,7 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
     return item
 
 # Tratamento de dados recebidos do banco de dados para os padrões da api
-def _tratar_formatos(dado):
+def _converter_formatos(dado):
     """Converte os atributos de um retorno da API nos tipos de dados padrões de resposta da API.
 
     Argumentos:
@@ -152,11 +154,13 @@ def _tratar_formatos(dado):
     elif type(dado) == datetime:      
         dado_convertido = dado.isoformat()
     elif type(dado) == tuple:
-	    dado_convertido = (dado[0], _tratar_formatos(dado[1]))
+	    dado_convertido = (dado[0], _converter_formatos(dado[1]))
     elif type(dado) == list:
-        dado_convertido = list(map(_tratar_formatos, dado))
+        dado_convertido = list(map(_converter_formatos, dado))
     elif type(dado) == dict:
-        dado_convertido = dict(map(_tratar_formatos, dado.items()))
+        dado_convertido = dict(map(_converter_formatos, dado.items()))
+    elif isinstance(dado, BaseObject): # Se for objeto de negócio transforma em dict
+        dado_convertido = dict(map(_converter_formatos, dado.__dict__.items()))
     else:
         dado_convertido = dado
     
