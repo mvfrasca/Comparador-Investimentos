@@ -117,105 +117,20 @@ def _converter_datas_dict(item: dict, nomes_e_formatos: dict):
         para datetime
         nomes_e_formatos: dictionary contendo os nomes dos nomes dos atributos de data e respectivos formatos a 
         serem convertidos para datetime. Ex.:
-        {'dt_ult_referencia':'%d/%m/%Y', 'dt_ult_atualiz':'%d/%m/%Y'}
+        {'dt_ult_referencia':'%d/%m/%Y', 'dth_ult_atualiz':'%d/%m/%Y'}
     Retorno:
         item com as datas convertidas.
     """
     # Varre o dicionário de nomes e formatos
     for atributo, formato in nomes_e_formatos.items():
         # Converte o campo data para datetime
-        item[atributo] = datetime.strptime(item[atributo], formato)
+        if atributo.startswith('dth'):
+            item[atributo] = datetime.strptime(item[atributo], formato)
+        # Converte o campo data para datetime.date
+        else: #if atributo.startswith('dt'):
+            item[atributo] = datetime.strptime(item[atributo], formato).date()
 
     return item
-
-# Converte uma string formatada de data em formato inteiro
-def _strdate_to_int(data: str, mascara_entrada: str):
-    """Converte uma string formatada em objeto datetime considerando o fuso horário pré-definido YYYYMMDD
-
-    Argumentos:
-        data: objeto a ser validado. Ex.: '01/01/2018'
-        mascara_entrada: máscara de data/hora da string de entrada. Ex.: '%Y-%m-%d'
-    Retorno:
-        Inteiro represetando a Data no formato YYYYMMDD
-    """
-    try:
-        # Converte o campo data para datetime
-        date = datetime.strptime(data, mascara_entrada)
-        # Converte a data para o formato inteiro esperado YYYYMMDD
-        intdate = int(datetime.strftime(date, "%Y%m%d"))
-        return intdate
-    except:
-        pass
-
-# Converte um inteiro formatada de data em formato inteiro
-def _strdate_to_int(data: str, mascara_entrada: str):
-    """Converte uma string formatada em inteiro considerando formato pré-definido YYYYMMDD
-
-    Argumentos:
-        data: string de uma data formatada. Ex.: '01/01/2018'
-        mascara_entrada: máscara de data/hora da string de entrada. Ex.: '%Y-%m-%d'
-    Retorno:
-        Inteiro representando a Data no formato YYYYMMDD
-    """
-    try:
-        # Converte o campo data para datetime
-        date = datetime.strptime(data, mascara_entrada)
-        # Converte a data para o formato inteiro esperado YYYYMMDD
-        intdate = int(datetime.strftime(date, "%Y%m%d"))
-        return intdate
-    except:
-        pass
-
-# Converte um inteiro formatada de data em formato inteiro
-def _date_to_int(data: datetime):
-    """Converte uma data em inteiro considerando formato pré-definido YYYYMMDD
-
-    Argumentos:
-        data: data no formato datetime
-    Retorno:
-        Inteiro representando a Data no formato YYYYMMDD
-    """
-    try:
-        # Converte a data para o formato inteiro esperado YYYYMMDD
-        intdate = int(datetime.strftime(data, "%Y%m%d"))
-        return intdate
-    except:
-        pass
-
-# Converte um inteiro formatada de data em formato inteiro
-def _intdate_to_str(data: int, mascara_saida: str):
-    """Converte inteiro que representa uma data em uma string com mascara solicitada
-
-    Argumentos:
-        data: string de uma data formatada. Ex.: '01/01/2018'
-        mascara_saida: máscara de data/hora da string de saída. Ex.: '%Y-%m-%d'
-    Retorno:
-        String representando a data no formato solicitado
-    """
-    try:
-        # Converte o campo data para datetime
-        date = datetime.strptime(str(data), "%Y%m%d")
-        # Converte a data para o formato de saída solicitado
-        strdate = datetime.strftime(date, mascara_saida)
-        return strdate
-    except:
-        pass
-
-# Converte um inteiro formatada de data em formato inteiro
-def _intdate_to_datetime(data: int):
-    """Converte inteiro que representa uma data no formato YYYYMMDD em formato datetime
-
-    Argumentos:
-        data: inteiro que representa uma data no formato YYYYMMDD. Ex.: 20181231'
-    Retorno:
-        Data no formato datetime
-    """
-    try:
-        # Converte o campo data para datetime
-        date = datetime.strptime(str(data), "%Y%m%d")
-        return date
-    except:
-        pass
 
 # Tratamento de dados recebidos do banco de dados para os padrões da api
 def _tratar_formatos(dado):
@@ -230,10 +145,12 @@ def _tratar_formatos(dado):
     dado_convertido = None
     if type(dado) in (str, int):
         dado_convertido = dado
-    elif type(dado) == datetime:      
+    elif type(dado).__name__ == 'date':
         dado_convertido = dado.isoformat()
     elif type(dado) == Decimal:
         dado_convertido = float(dado)
+    elif type(dado) == datetime:      
+        dado_convertido = dado.isoformat()
     elif type(dado) == tuple:
 	    dado_convertido = (dado[0], _tratar_formatos(dado[1]))
     elif type(dado) == list:
@@ -244,34 +161,6 @@ def _tratar_formatos(dado):
         dado_convertido = dado
     
     return dado_convertido
-
-# Tratamento de dados recebidos do banco de dados para os padrões da api
-def _tratar_formato(atributo):
-    """Converte o tipo de dado do atributo para o tipo de dados padrão de resposta da API.
-
-    Argumentos:
-        atributo: atributo cujo tipo de dado será convertido.
-    Retorno:
-        atributo com o tipo de dado convertido.
-    """
-    if type(atributo) == datetime:
-        atributo = atributo.isoformat()
-    elif type(atributo) == Decimal:
-        atributo = float(atributo)
-    
-    return atributo
-            
-
-    # Varre os atributos da entidade
-    for atributo in entidade.items():
-        # Tratamento de campos data
-        if atributo.startswith('dt_'):
-            # Converte o campo data para datetime
-            entidade[atributo] = datetime.fromisoformat(entidade[atributo])
-        if atributo.startswith('val_'):
-            entidade[atributo] = Decimal(entidade[atributo])
-
-    return entidade
 
 class InputException(Exception):
     """Exceção disparada nos casos argumentos de entrada inválidos.

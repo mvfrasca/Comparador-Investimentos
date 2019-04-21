@@ -23,12 +23,12 @@ class Indice(BaseObject):
     
     Argumentos:
         tp_indice: tipo de índice (indexador). Ex.: ipca, poupanca, cdi.
-        dt_referencia: data de referência do índice
+        dt_referencia: data de referência do índice (formato datetime.date)
         val_indice: valor do índice em percentual. Ex.: 0.0123
-        dt_inclusao: data da inclusão do índice na base de dados de índices
+        dth_inclusao: data/hora da inclusão do índice na base de dados de índices (formato datetime)
     """
     # Método criador
-    def __init__(self, tp_indice: str, dt_referencia: datetime, val_indice: float, dt_inclusao: datetime):
+    def __init__(self, tp_indice: str, dt_referencia: datetime.date, val_indice: float, dth_inclusao: datetime):
         # Define a precisão para 9 casas decimais
         getcontext().prec = 9
         # Define chave única para o índice
@@ -37,11 +37,11 @@ class Indice(BaseObject):
         self.tp_indice = tp_indice.lower()
         self.dt_referencia = dt_referencia
         self.val_indice = val_indice
-        self.dt_inclusao = dt_inclusao
+        self.dth_inclusao = dth_inclusao
 
     # @classmethod
     # def fromDict(lista:dict):
-    #     indice = Indice(tp_indice = lista['tp_indice'], dt_referencia = lista['dt_referencia'], val_indice = lista['val_indice'], dt_inclusao = lista['dt_inclusao'])
+    #     indice = Indice(tp_indice = lista['tp_indice'], dt_referencia = lista['dt_referencia'], val_indice = lista['val_indice'], dth_inclusao = lista['dth_inclusao'])
 
 
 

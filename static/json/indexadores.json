@@ -6,7 +6,7 @@
         "periodicidade": "Mensal",
         "serie": "196",
         "qtd_regs_ult_atualiz": 0,
-        "dt_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "01/01/1900"
     },
     {
         "id": "ipca",
@@ -15,7 +15,7 @@
         "periodicidade": "Mensal",
         "serie": "433",
         "qtd_regs_ult_atualiz": 0,
-        "dt_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "01/01/1900"
 
     },
     {
@@ -25,7 +25,7 @@
         "periodicidade": "Diário",
         "serie": "12",
         "qtd_regs_ult_atualiz": 0,
-        "dt_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "01/01/1900"
     },
     {
         "id": "selic",
@@ -34,7 +34,7 @@
         "periodicidade": "Diário",
         "serie": "11",
         "qtd_regs_ult_atualiz": 0,
-        "dt_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "01/01/1900"
     },
     {
         "id": "igpm",
@@ -43,6 +43,6 @@
         "periodicidade": "Mensal",
         "serie": "189",
         "qtd_regs_ult_atualiz": 0,
-        "dt_ult_atualiz": "01/01/1900"
+        "dth_ult_atualiz": "01/01/1900"
     }
 ]

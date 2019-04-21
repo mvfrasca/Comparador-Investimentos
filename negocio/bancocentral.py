@@ -8,9 +8,6 @@ import json, requests
 import utils.helper
 from utils.helper import _is_number
 from utils.helper import _is_date
-from utils.helper import _strdate_to_int
-from utils.helper import _date_to_int
-from utils.helper import _intdate_to_str
 from utils.helper import _converter_datas_dict
 from utils.helper import ServerException
 # Importa o módulo de log

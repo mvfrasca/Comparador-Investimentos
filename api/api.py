@@ -17,9 +17,6 @@ from utils.helper import _clean_attributes
 from utils.helper import _is_number
 from utils.helper import _is_date
 from utils.helper import _converter_datas_dict
-from utils.helper import _strdate_to_int
-from utils.helper import _date_to_int
-from utils.helper import _intdate_to_str
 from utils.helper import InputException
 from utils.helper import BusinessException
 from utils.helper import ServerException
@@ -47,7 +44,7 @@ def calcular_investimento():
         indexador: nome identificador do indexador (ex.: ipca, selic)
         taxa: percentual aplicado sobre o índice (ex.: 130 (130% do cdi), 7 (IPCA + 7%))
         dataInicial: data inicial do investimento
-        dataFinal (datetime): data de vencimento do investimento
+        dataFinal: data de vencimento do investimento
     Retorno:
             Retorna uma lista contendo dictionaries referentes aos valores 
             de saldo e rentabilidade do investimento além de uma sublista 
@@ -109,7 +106,7 @@ def calcular_investimento():
         mensagem  = "Data inicial do investimento inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataInicial', mensagem)
     else:
-        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d")
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d").date()
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
@@ -121,7 +118,7 @@ def calcular_investimento():
         mensagem  = "Data final do investimento inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataFinal', mensagem)
     else:
-        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d")
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d").date()
     
     try: 
         # Instancia a classe de negócio Investimento 
@@ -137,7 +134,7 @@ def calcular_investimento():
 
 @api.route('/investimento', methods=['OPTIONS'])
 def investimento_options (self):
-    return {'Allow' : 'GET' }, 200, \
+    return {'Allow' : 'GET' }, [200,400], \
     { 'Access-Control-Allow-Origin': '*', \
     'Access-Control-Allow-Methods' : 'GET' }
 
@@ -175,7 +172,7 @@ def post_feriados():
     except Exception as e:
         raise ServerException(e)
     else:
-        return _success({ 'mensagem': '{} feriados incluidos com sucesso!'.format(qtdFeriados) }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
+        return _success({ 'mensagem': '{} feriados incluidos/atualizados com sucesso!'.format(qtdFeriados) }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
 @api.route('/indexadores/all/indices', methods=['GET'])
 def atualizar_indices():
@@ -281,7 +278,7 @@ def list_indices(id):
         mensagem  = "Data inicial do período inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataInicial', mensagem)
     else:
-        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d")
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d").date()
 
     # Validação - dataFinal
     if 'dataFinal' not in queryParameters:
@@ -291,7 +288,7 @@ def list_indices(id):
         mensagem  = "Data final do período inválida. Formato esperado: AAAA-MM-DD"
         raise InputException('dataFinal', mensagem)
     else:
-        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d")
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d").date()
 
     try:
         # Instancia a classe de negócios responsável pela gestão de cadastros da API

@@ -159,13 +159,14 @@ def _tratar_formatos(entidade: dict):
     getcontext().prec = 9
     # Varre os atributos da entidade
     for atributo in entidade.keys():
-        # Tratamento de campos data
+        # Tratamento de campos data e data
         if atributo.startswith('dt_'):
-            # Converte o campo data para datetime
+            entidade[atributo] = datetime.fromisoformat(entidade[atributo]).date()
+        # Tratamento de campos data e data/hora
+        elif atributo.startswith('dth_'):
             entidade[atributo] = datetime.fromisoformat(entidade[atributo])
-        if atributo.startswith('val_'):
+        elif atributo.startswith('val_'):
             entidade[atributo] = Decimal(entidade[atributo])
-
     return entidade
 
 # Tratamento de dados a serem consistidos no banco de dados
@@ -184,9 +185,13 @@ def to_datastore(ds: datastore.Client, kind: TipoEntidade, entidade: dict):
     for atributo in entidade.keys():
         if atributo == 'id':
             key = ds.key(kind.value, entidade['id'])
-        # Tratamento de campos data
-        elif atributo.startswith('dt_'):
-            # Converte o campo datatime para string no padrão ISO
+        # Tratamento de campos data e data/hora
+        # elif atributo.startswith(('dt_','dth_')):
+        #     # Converte o campo datatime para string no padrão ISO
+        #     entidade[atributo] = entidade[atributo].isoformat()
+        elif type(entidade[atributo]).__name__ == 'date':
+            entidade[atributo] = entidade[atributo].isoformat()
+        elif type(entidade[atributo]) == datetime:      
             entidade[atributo] = entidade[atributo].isoformat()
 
     # Se entidade não possuia campo 'id' gera chave automática do datastore

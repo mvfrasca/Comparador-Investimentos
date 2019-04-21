@@ -12,10 +12,6 @@ import math
 # Importa o módulo Helper
 import utils.helper
 from utils.helper import _converter_datas_dict
-from utils.helper import _strdate_to_int
-from utils.helper import _date_to_int
-from utils.helper import _intdate_to_str
-from utils.helper import _intdate_to_datetime
 
 class Investimento(BaseObject):
     """Classe que representa um Investimento.

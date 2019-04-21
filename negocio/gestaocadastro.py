@@ -11,9 +11,6 @@ import csv
 # Importa o módulo Helper
 import utils.helper
 from utils.helper import _converter_datas_dict
-from utils.helper import _strdate_to_int
-from utils.helper import _date_to_int
-from utils.helper import _intdate_to_str
 from utils.helper import InputException
 from utils.helper import BusinessException
 from utils.helper import ServerException
@@ -47,7 +44,7 @@ class GestaoCadastro(BaseObject):
             # indexadores = list(map(lambda x: dict(x.keys(), x.values()), list(f)))
             # Prepara o dicionário com os nomes dos campos data e respectivo formato no json
             # para que a função _converter_datas_dict realize a conversão para datetime
-            datas_converter = {'dt_ult_referencia':'%d/%m/%Y', 'dt_ult_atualiz':'%d/%m/%Y'}
+            datas_converter = {'dt_ult_referencia':'%d/%m/%Y', 'dth_ult_atualiz':'%d/%m/%Y'}
             indexadores = list(map(lambda item: _converter_datas_dict(item, datas_converter), indexadores))
             # Loga os estado atual do indicador
             logger.info("Carga inicial de indexadores")
@@ -64,24 +61,40 @@ class GestaoCadastro(BaseObject):
             Quantidade de feriados incluidos.
         """
         # Carrega arquivo CSV que contém a carga inicial dos feriados
-        with open(r'''static\json\feriados.csv''',encoding='UTF8') as f:
+        with open(r'''static\csv\feriados.csv''',encoding='ANSI') as f:
             reader = csv.reader(f, delimiter=';')
             feriados = []
-            
+            tipoEntidade = get_model().TipoEntidade.FERIADOS
+            contador = 0
             for linha in reader:
-                # Recupera atributo data da linha do arquivo e formata com padrão de data inteiro
-                dt_feriado = datetime.strptime(linha[0], "%d/%m/%Y")
+                # Recupera atributo data da linha do arquivo e formata com padrão de datetime.date
+                dt_feriado = datetime.strptime(linha[0], "%d/%m/%Y").date()
                 # Prepara o dicionário com os atributos da entidade feriado
-                feriado = {'id': dt_feriado, 'dt_feriado': dt_feriado, 'descricao': linha[2]}
+                feriado = {'id': int(datetime.strftime(dt_feriado,'%Y%m%d')), 'dt_feriado': dt_feriado, 'descricao': linha[2]}
                 feriados.append(feriado)
+                if len(feriados) == 100:
+                    # Inclui/atualiza a base de dados com os indexadores        
+                    get_model().update_multi(tipoEntidade, feriados)
+                    # Atualiza contador de inserções
+                    contador+= len(feriados)
+                    # Loga os estado atual da carga
+                    logger.info("Carga inicial de feriados. Qtd. parcial carregada: {}".format(contador))
+                    # Limpa a lista de feriados para nova inclusão parcial
+                    feriados.clear()            
+            else:
+                # Inclui/atualiza a base de dados com os indexadores        
+                get_model().update_multi(tipoEntidade, feriados)
+                # Atualiza contador de inserções
+                contador+= len(feriados)
+                # Loga os estado atual da carga
+                logger.info("Carga inicial de feriados. Qtd. parcial carregada: {}".format(contador))
+                # Limpa a lista de feriados para nova inclusão parcial
+                feriados.clear()   
 
             # Loga os estado atual do indicador
-            logger.info("Carga inicial de feriados. Qtd. feriados carregada: {}".format(len(feriados)))
-            # Inclui/atualiza a base de dados com os indexadores
-            tipoEntidade = get_model().TipoEntidade.FERIADOS
-            get_model().update_multi(tipoEntidade, feriados)
+            logger.info("Carga inicial de feriados. Qtd. feriados carregada: {}".format(contador))
 
-        return len(feriados)
+        return contador
 
     def list_indexadores(self, dataReferencia: datetime=None):
         """Obtém a lista de indexadores disponíveis cuja data de última atualização é anterior ao argumento dataReferencia.
@@ -174,7 +187,7 @@ class GestaoCadastro(BaseObject):
                 #     continue
         
                 # Popula uma instancia de índice a ser consistida
-                indice = Indice(tp_indice = tipoIndice, dt_referencia = dataReferencia, val_indice = valorIndice, dt_inclusao = datetime.now())
+                indice = Indice(tp_indice = tipoIndice, dt_referencia = dataReferencia, val_indice = valorIndice, dth_inclusao = datetime.now())
 
                 # Inclui o índice na coleção de índices a ser consistida em banco de dados
                 indicesConsistir.append(indice)
@@ -195,7 +208,7 @@ class GestaoCadastro(BaseObject):
                     # para controle de próximas atualizações
                     # TODO: Ajustar para atualizar a partir de GestaoCadastro utilizando objeto Indexador
                     indexador['dt_ult_referencia'] = dataReferencia
-                    indexador['dt_ult_atualiz'] = datetime.now()
+                    indexador['dth_ult_atualiz'] = datetime.now()
                     indexador['qtd_regs_ult_atualiz'] = contador
                     tipoEntidade = get_model().TipoEntidade.INDEXADORES
                     get_model().update(tipoEntidade, indexador, tipoIndice)
@@ -210,7 +223,7 @@ class GestaoCadastro(BaseObject):
                 # para controle de próximas atualizações
                 # TODO: Ajustar para atualizar a partir de GestaoCadastro utilizando objeto Indexador
                 indexador['dt_ult_referencia'] = dataReferencia
-                indexador['dt_ult_atualiz'] = datetime.now()
+                indexador['dth_ult_atualiz'] = datetime.now()
                 indexador['qtd_regs_ult_atualiz'] = contador
                 tipoEntidade = get_model().TipoEntidade.INDEXADORES
                 get_model().update(tipoEntidade, indexador, tipoIndice)
