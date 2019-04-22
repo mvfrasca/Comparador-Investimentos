@@ -64,26 +64,30 @@ class Investimento(BaseObject):
         if self.dataInicial < datetime(2001, 1, 1).date():
             mensagem  = "Data inicial do investimento deve ser maior ou igual a 01/01/2001."
             raise BusinessException('BE001', mensagem)
+        # Validação - data final máxima
+        elif self.dataFinal > datetime(2078, 12, 31).date():
+            mensagem  = "Data final do investimento não pode ser maior que 31/12/2078."
+            raise BusinessException('BE002', mensagem)
         # Validação - período de investimento
         elif self.dataFinal <= self.dataInicial:
             mensagem  = "Data final do investimento deve ser maior que a data inicial."
-            raise BusinessException('BE002', mensagem)
+            raise BusinessException('BE003', mensagem)
         # Validação - Valor inicial de investimento
         elif self.valInvestimentoInicial <= Decimal(0):
             mensagem  = "Valor inicial do investimento deve ser maior que 0 (zero)."
-            raise BusinessException('BE003', mensagem)
+            raise BusinessException('BE004', mensagem)
         # Validação - Tipo de investimento inválido
         elif self.tipoInvestimento.lower() in TipoInvestimento.values():
             mensagem  = "Tipo de investimento inválido. Tipos esperado: {}.".format(TipoInvestimento.values())
-            raise BusinessException('BE004', mensagem)
+            raise BusinessException('BE005', mensagem)
         # Validação - Tipo de indexador inválido
         elif self.indexador.lower() in TipoIndexador.values():
             mensagem  = "Tipo de indexador inválido. Tipos esperado: {}.".format(TipoIndexador.values())
-            raise BusinessException('BE005', mensagem)
+            raise BusinessException('BE006', mensagem)
         # Validação - Taxa inválida
         elif self.taxa <= Decimal(0):
             mensagem  = "Taxa do investimento não pode ser menor que 0 (zero)."
-            raise BusinessException('BE006', mensagem)
+            raise BusinessException('BE007', mensagem)
 
         # Define a precisão para 9 casas decimais
         getcontext().prec = 9
@@ -165,11 +169,14 @@ class Investimento(BaseObject):
 
         return resultadoInvestimento
 
-    def taxaAnualToMensal(self, taxaAnual:Decimal):
+    @classmethod
+    def taxaAnualToMensal(cls, taxaAnual:Decimal):
         """Converte uma taxa anual em taxa mensal.
-    
+
+        Argumentos: 
+            taxaAnual: taxa Anual a ser convertida
         Retorno:
-            Retorna um decimal representando a taxa mensal.
+            Retorna um decimal representando a taxa mensal calculada.
         """
         taxaAnual = taxaAnual / Decimal(100) 
         taxaMensal = Decimal(0)
@@ -178,6 +185,24 @@ class Investimento(BaseObject):
         taxaMensal = taxaMensal * Decimal(100)
 
         return taxaMensal
+    
+    @classmethod
+    def taxaMensalToDiaria(cls, taxaMensal:Decimal, diasUteisMes:Decimal):
+        """Converte uma taxa mensal em taxa diária.
+    
+        Argumentos: 
+            taxaMensal: taxa Mensal a ser convertida
+            diasUteisMes: quantidade de dias úteis no mês
+        Retorno:
+            Retorna um decimal representando a taxa diária calculada.
+        """
+        taxaMensal = taxaMensal / Decimal(100) 
+        taxaDiaria = Decimal(0)
+        tempTaxaMensal = Decimal(1) + taxaMensal 
+        taxaDiaria = Decimal(math.pow(tempTaxaMensal, (Decimal(1 / diasUteisMes))) - 1)
+        taxaDiaria = taxaDiaria * Decimal(100)
+
+        return taxaDiaria
 
     def obterPercIR(self, qtdDiasCorridos:int):
         """Identifica o percentual de Imposto de renda aplicável de acordo com a quantidade 

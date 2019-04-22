@@ -13,6 +13,6 @@ indexes:
     direction: asc
   - name: dt_ult_referencia 
     direction: asc
-
+    
   # Para implantar:
   # gcloud datastore create-indexes index.yaml

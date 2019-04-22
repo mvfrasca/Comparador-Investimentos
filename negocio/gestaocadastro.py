@@ -74,6 +74,20 @@ class GestaoCadastro(BaseObject):
 
         return contador
 
+    def get_feriados(self, dataInicial: datetime.date, dataFinal: datetime.date):
+        """Obtém a lista de indexadores disponíveis cuja data de última atualização é anterior ao argumento dataReferencia.
+        
+        Argumentos:
+            - dataInicial: data inicial do período para consulta aos feriados
+            - dataFinal: data final do período para consulta aos feriados
+        Retorno:
+            - lista de feriados referente ao período solicitado.
+        """
+        # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à dt_referencia)
+        feriados = list(map(Indexador.fromDict, get_model().list_feriados(dataInicial, dataFinal)))
+
+        return feriados
+
     def put_indexadores(self):
         """Realiza a carga inicial das entidades que representarão os indexadores.
     
@@ -114,6 +128,8 @@ class GestaoCadastro(BaseObject):
             - dataReferencia: data de referencia que limita a consulta aos indexadores cuja data de última 
             atualização seja anterior ao referido argumento. Quando não informada ou for informada como None,
             todos os indexadores cadastrados são retornados.
+            - tipoAtualizacao: tipo de atualização dos índices: automática (consulta à API do Banco Central) ou calculada a 
+            partir de de outro índice com periodicidade diferente.
         """
         strTipoAtualizacao = None
         if tipoAtualizacao is not None:
@@ -206,6 +222,7 @@ class GestaoCadastro(BaseObject):
             # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
             # zerados caso contrário datastore não reconhece)
             dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+            contador = 0
             # Obtém a lista de indexadores com tipo e atualizaçaõ AUTOMÁTICA 
             # cuja data de última atualização é anterior à data atual
             indexadores = self.get_indexadores(dataAtual, TipoAtualizacao.AUTOMATICA)
@@ -242,13 +259,56 @@ class GestaoCadastro(BaseObject):
                     indices.append(indice)
                 
                 # Inclui / Atualiza os índices em lote
-                contador = self.put_indices(indexador, indices)
+                contador+= self.put_indices(indexador, indices)
 
-                return contador
+            return contador
 
         except BusinessException as be:
             raise be
         except Exception as e:
             raise ServerException(e)
                 
-        
+    def atualizar_indices_calculados(self):
+        """Atualiza os índices dos indexadores cujo tipo de atualização é calculada para periodicidade Diária 
+        a partir dos índices de periodicidade Mensal. 
+        """
+        try:
+            # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
+            # zerados caso contrário datastore não reconhece)
+            dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
+            contador = 0
+            # Obtém a lista de indexadores com tipo e atualizaçaõ AUTOMÁTICA 
+            # cuja data de última atualização é anterior à data atual
+            indexadores = self.get_indexadores(dataAtual, TipoAtualizacao.CALCULADA)
+
+            # Percorre os indexadores para consulta e atualização
+            for indexador in indexadores:
+                # Loga os estado atual do indexador
+                logger.info('Indexador a receber atualização de índices CALCULADOS: {}'.format(indexador))
+
+                # Recupera indices disponíveis do indexador referenciado que possui os índices Mensais 
+                # desde a última atualização até hoje 
+                indicesMensais = self.list_indices(indexador.id_indexador_referenciado, indexador.dt_ult_referencia, dataAtual)
+                # Inicializa coleção e contador de inserções/atualizações
+                indices = []
+                # Varre a lista de índices retornadas pela API
+                for indiceMensal in indicesMensais:
+                    # Recupera as propriedades do índice (data e valor)
+                    dataReferencia = indiceMensal['data']
+                    valorIndice = float(indiceMensal['valor'])
+                    
+                    logger.info('Índice Mensal calculado: {0}, taxa Mensal: {1}, taxa Diária: {2}'.format(indexador.nome, len(indiceMensal), indiceMensal))
+                    # Popula uma instancia de índice a ser consistida
+                    indice = Indice(tp_indice = indexador.id, dt_referencia = dataReferencia, val_indice = valorIndice, dth_inclusao = datetime.now())
+                    # Inclui o índice na coleção de índices a ser consistida em banco de dados
+                    indices.append(indice)
+                
+                # Inclui / Atualiza os índices em lote
+                contador+= self.put_indices(indexador, indices)
+
+            return contador
+
+        except BusinessException as be:
+            raise be
+        except Exception as e:
+            raise ServerException(e)     

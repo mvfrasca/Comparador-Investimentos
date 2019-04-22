@@ -86,6 +86,22 @@ def list_indices(indexador :str, dataInicial :datetime.date, dataFinal : datetim
     indices = builtin_list(map(from_datastore, indices))
     return indices
 
+def list_feriados(dataInicial :datetime.date, dataFinal : datetime.date):
+    # Instancia o cliente do banco de dados NOSQL GCloud DataStore
+    ds = get_client()
+    # Prepara a query para consultar valores do índice IPCA
+    query = ds.query(kind=TipoEntidade.INDICES.value)
+    # Inclui filtros da consulta
+    query.add_filter('dt_feriado','>=', dataInicial.isoformat())
+    query.add_filter('dt_feriado','<=', dataFinal.isoformat())
+    #Define ordenação da consulta
+    query.order = ['dt_feriado']
+    # Executa a consulta e armazena num dictionary 
+    feriados = query.fetch()
+    # Trata os formatos retornados da lista de entidades
+    feriados = builtin_list(map(from_datastore, feriados))
+    return feriados
+
 def read(kind: TipoEntidade, id: str):
     ds = get_client()
     key = ds.key(kind.value, id)
