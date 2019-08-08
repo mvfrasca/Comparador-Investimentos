@@ -48,7 +48,7 @@ class Calendario(BaseObject):
             data = dataInicial
             while data <= dataFinal:
                 # Se dia da semana for sábado (5) ou domingo (6)
-                if data.date().weekday() not in (5,6) and data not in feriados:
+                if data.weekday() not in (5,6) and data not in feriados:
                     diasUteis.append(data)
                 # Acrescenta 1 dia
                 data+= timedelta(days=1)

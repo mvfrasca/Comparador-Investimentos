@@ -85,7 +85,7 @@ class Investimento(BaseObject):
             mensagem  = "Tipo de indexador inválido [{0}]. Tipos esperado: {}.".format(self.indexador.lower(), TipoIndexador.values())
             raise BusinessException('BE006', mensagem)
         # Validação - Taxa inválida
-        elif self.taxa <= Decimal(0):
+        elif self.taxa <= Decimal(0) and self.indexador.lower() != 'poupanca':
             mensagem  = "Taxa do investimento não pode ser menor que 0 (zero)."
             raise BusinessException('BE007', mensagem)
 

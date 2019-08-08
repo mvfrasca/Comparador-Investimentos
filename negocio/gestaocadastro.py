@@ -3,7 +3,7 @@ from decimal import Decimal, getcontext
 # Importa módulo para tratamento de data/hora
 from datetime import datetime
 # Importa módulo para operações com datas
-from dateutil import relativedelta
+from dateutil.relativedelta import relativedelta
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
 # Importa módulo para tratamento de arquivos json
@@ -228,10 +228,11 @@ class GestaoCadastro(BaseObject):
             # zerados caso contrário datastore não reconhece)
             dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
             contador = 0
+            
             # Obtém a lista de indexadores com tipo e atualizaçaõ AUTOMÁTICA 
             # cuja data de última atualização é anterior à data atual
             indexadores = self.get_indexadores(dataAtual, TipoAtualizacao.AUTOMATICA)
-
+            
             # Percorre os indexadores para consulta e atualização
             for indexador in indexadores:
                 # Loga os estado atual do indexador
@@ -265,6 +266,8 @@ class GestaoCadastro(BaseObject):
                 
                 # Inclui / Atualiza os índices em lote
                 contador+= self.put_indices(indexador, indices)
+
+            # self.atualizar_indices_calculados()
 
             return contador
 
@@ -301,7 +304,7 @@ class GestaoCadastro(BaseObject):
                     # Define data inicial de pesquisa de dias úteis
                     dataInicial = indiceMensal['dt_referencia']
                     # Define data final de pesquisa de dias úteis
-                    dataFinal = dataInicial + relativedelta.relativedelta(day=31)
+                    dataFinal = dataInicial + relativedelta(day=31)
                     # Obtém a lista de dias úteis no mês
                     diasUteis = Calendario.listDiasUteis(dataInicial, dataFinal)
                     # Obtém a qtd de dias úteis no mês
