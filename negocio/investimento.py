@@ -77,12 +77,12 @@ class Investimento(BaseObject):
             mensagem  = "Valor inicial do investimento deve ser maior que 0 (zero)."
             raise BusinessException('BE004', mensagem)
         # Validação - Tipo de investimento inválido
-        elif self.tipoInvestimento.lower() in TipoInvestimento.values():
-            mensagem  = "Tipo de investimento inválido. Tipos esperado: {}.".format(TipoInvestimento.values())
+        elif self.tipoInvestimento.lower() not in TipoInvestimento.values():
+            mensagem  = "Tipo de investimento inválido [{0}]. Tipos esperado: {1}.".format(self.tipoInvestimento.lower(), TipoInvestimento.values())
             raise BusinessException('BE005', mensagem)
         # Validação - Tipo de indexador inválido
-        elif self.indexador.lower() in TipoIndexador.values():
-            mensagem  = "Tipo de indexador inválido. Tipos esperado: {}.".format(TipoIndexador.values())
+        elif self.indexador.lower() not in TipoIndexador.values():
+            mensagem  = "Tipo de indexador inválido [{0}]. Tipos esperado: {}.".format(self.indexador.lower(), TipoIndexador.values())
             raise BusinessException('BE006', mensagem)
         # Validação - Taxa inválida
         elif self.taxa <= Decimal(0):
@@ -168,6 +168,8 @@ class Investimento(BaseObject):
         #     item['class_gols_pro_mand'] = index 
 
         return resultadoInvestimento
+
+        datetime.to
 
     @classmethod
     def taxaAnualToMensal(cls, taxaAnual:Decimal):

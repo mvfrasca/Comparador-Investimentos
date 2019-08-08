@@ -91,7 +91,7 @@ def create_app(config, debug=False, testing=False, config_overrides=None):
     @app.errorhandler(BusinessException)
     def business_exception(e):
         logger.error(traceback.format_exc(limit=5))
-        resposta = {'BusinessException': {'codigo': e.atributo, 'mensagem': e.mensagem}}
+        resposta = {'BusinessException': {'codigo': e.codigo, 'mensagem': e.mensagem}}
         return _error(resposta, 400), 400
 
     return app

@@ -90,7 +90,7 @@ def list_feriados(dataInicial :datetime.date, dataFinal : datetime.date):
     # Instancia o cliente do banco de dados NOSQL GCloud DataStore
     ds = get_client()
     # Prepara a query para consultar valores do índice IPCA
-    query = ds.query(kind=TipoEntidade.INDICES.value)
+    query = ds.query(kind=TipoEntidade.FERIADOS.value)
     # Inclui filtros da consulta
     query.add_filter('dt_feriado','>=', dataInicial.isoformat())
     query.add_filter('dt_feriado','<=', dataFinal.isoformat())
@@ -166,7 +166,7 @@ def from_datastore(entity):
     if isinstance(entity, builtin_list):
         entity = entity.pop()
     
-    entity['id'] = entity.key.name
+    entity['id'] = entity.key.name if entity.key.name != None else entity.key.id
     entity = _tratar_formatos(entity.copy())
 
     return entity

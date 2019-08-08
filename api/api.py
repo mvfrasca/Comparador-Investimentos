@@ -174,6 +174,62 @@ def post_feriados():
     else:
         return _success({ 'mensagem': '{} feriados incluidos/atualizados com sucesso!'.format(qtdFeriados) }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
+@api.route('/feriados', methods=['GET'])
+def list_feriados():
+    """ Retorna lista com os feriados referentes a um período
+        
+    Argumentos:
+        dataInicial: data inicial do período para consulta de feriados
+        dataFinal: data de vencimento do período para consulta de feriados
+    Retorno:
+            Retorna uma lista contendo os feriados do período informado
+    """
+    # Obtém argumentos
+    queryParameters = request.args
+    # ------------------------------------------------------------------------------ #
+    # Resgata e valida os dados de entrada para cálculo da evolução do investimento
+    # ------------------------------------------------------------------------------ #
+    # Validação - dataInicial
+    if 'dataInicial' not in queryParameters:
+        mensagem  = "Você deve informar a data inicial do período para consulta de feriados. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataInicial', mensagem)
+    elif _is_date(queryParameters.get('dataInicial'), "%Y-%m-%d") == False:
+        mensagem  = "Data inicial do período para consulta de feriados inválida. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataInicial', mensagem)
+    else:
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d").date()
+
+    # Validação - dataFinal
+    if 'dataFinal' not in queryParameters:
+        mensagem  = "Você deve informar a data final do período para consulta de feriados. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataFinal', mensagem)
+    elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
+        mensagem  = "Data final do período para consulta de feriados inválida. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataFinal', mensagem)
+    else:
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d").date()
+    
+    try:
+        # Instancia a classe de negócios responsável pela gestão de cadastros da API
+        objGestaoCadastro = GestaoCadastro()
+        # Obtém a lista de indexadores cadastrados
+        feriados = objGestaoCadastro.get_feriados(dataInicial, dataFinal)
+        
+    except BusinessException as be:
+        raise be
+    except Exception as e:
+        raise ServerException(e)
+    else:
+        resposta = {'mensagem': 'Consulta aos feriados realizada com sucesso'}
+        resposta.update({'feriados': feriados})
+        return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
+
+@api.route('/feriados', methods=['OPTIONS'])
+def feriados_options (self):
+    return {'Allow' : 'GET' }, [200,400,500], \
+    { 'Access-Control-Allow-Origin': '*', \
+    'Access-Control-Allow-Methods' : 'GET' }
+
 @api.route('/indexadores/all/indices', methods=['GET'])
 def atualizar_indices():
     """Atualiza os índices dos indexadores cadastrados. Obtém os índices atualizados desde a 

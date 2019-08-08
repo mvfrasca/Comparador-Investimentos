@@ -2,6 +2,8 @@
 from decimal import Decimal, getcontext
 # Importa módulo para tratamento de data/hora
 from datetime import datetime
+# Importa módulo para operações com datas
+from dateutil import relativedelta
 # Importa o módulo responsável por selecionar o banco de dados conforme configuração no pacote model
 from model import get_model
 # Importa módulo para tratamento de arquivos json
@@ -21,6 +23,8 @@ from negocio.baseobject import BaseObject
 from negocio.bancocentral import BancoCentral
 from negocio.indice import Indice
 from negocio.indexador import Indexador, TipoIndexador, TipoAtualizacao
+from negocio.calendario import Calendario
+from negocio.feriado import Feriado
 
 # Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Classe GestaoCadastro')
@@ -75,7 +79,7 @@ class GestaoCadastro(BaseObject):
         return contador
 
     def get_feriados(self, dataInicial: datetime.date, dataFinal: datetime.date):
-        """Obtém a lista de indexadores disponíveis cuja data de última atualização é anterior ao argumento dataReferencia.
+        """Obtém a lista de feriados existentes entre as datas inicial e final informadas.
         
         Argumentos:
             - dataInicial: data inicial do período para consulta aos feriados
@@ -83,8 +87,8 @@ class GestaoCadastro(BaseObject):
         Retorno:
             - lista de feriados referente ao período solicitado.
         """
-        # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à dt_referencia)
-        feriados = list(map(Indexador.fromDict, get_model().list_feriados(dataInicial, dataFinal)))
+        # Obtém a lista de feriados do período solicitado
+        feriados = list(map(Feriado.fromDict, get_model().list_feriados(dataInicial, dataFinal)))
 
         return feriados
 
@@ -134,6 +138,7 @@ class GestaoCadastro(BaseObject):
         strTipoAtualizacao = None
         if tipoAtualizacao is not None:
             strTipoAtualizacao = tipoAtualizacao.value
+
         # Obtém a lista de indexadores para atualização (cuja data de última atualização é anterior à dt_referencia)
         indexadores = list(map(Indexador.fromDict, get_model().list_indexadores(dataReferencia, strTipoAtualizacao)))
 
@@ -188,7 +193,7 @@ class GestaoCadastro(BaseObject):
                 # Limpa índices consistidos
                 for i in range(qtd):
                     ult_indice_removido = indices.pop(0)
-                # Atualiza a data do último índice armazanado na entidade do indexador correspondente 
+                # Atualiza a data do último índice armazenado na entidade do indexador correspondente 
                 # para controle de próximas atualizações
                 indexador.dt_ult_referencia = ult_indice_removido.dt_referencia
                 indexador.dth_ult_atualiz = datetime.now()
@@ -293,15 +298,24 @@ class GestaoCadastro(BaseObject):
                 indices = []
                 # Varre a lista de índices retornadas pela API
                 for indiceMensal in indicesMensais:
-                    # Recupera as propriedades do índice (data e valor)
-                    dataReferencia = indiceMensal['data']
-                    valorIndice = float(indiceMensal['valor'])
-                    
-                    logger.info('Índice Mensal calculado: {0}, taxa Mensal: {1}, taxa Diária: {2}'.format(indexador.nome, len(indiceMensal), indiceMensal))
-                    # Popula uma instancia de índice a ser consistida
-                    indice = Indice(tp_indice = indexador.id, dt_referencia = dataReferencia, val_indice = valorIndice, dth_inclusao = datetime.now())
-                    # Inclui o índice na coleção de índices a ser consistida em banco de dados
-                    indices.append(indice)
+                    # Define data inicial de pesquisa de dias úteis
+                    dataInicial = indiceMensal['dt_referencia']
+                    # Define data final de pesquisa de dias úteis
+                    dataFinal = dataInicial + relativedelta(day=31)
+                    # Obtém a lista de dias úteis no mês
+                    diasUteis = Calendario.listDiasUteis(dataInicial, dataFinal)
+                    # Obtém a qtd de dias úteis no mês
+                    qtdDiasUteis = float(len(diasUteis))
+
+                    for dataReferencia in diasUteis:
+                        # Obtém o valor do índice diário partindo do indice mensal com base na qtd de dias úteis
+                        valorIndice = (1+float(indiceMensal['val_indice']))**(1/qtdDiasUteis)-1
+                                            
+                        logger.info('Índice Diário calculado: {0}, taxa Mensal: {1}, taxa Diária: {2}'.format(indexador.nome, indiceMensal['val_indice'], valorIndice))
+                        # Popula uma instancia de índice a ser consistida
+                        indice = Indice(tp_indice = indexador.id, dt_referencia = dataReferencia, val_indice = valorIndice, dth_inclusao = datetime.now())
+                        # Inclui o índice na coleção de índices a ser consistida em banco de dados
+                        indices.append(indice)
                 
                 # Inclui / Atualiza os índices em lote
                 contador+= self.put_indices(indexador, indices)
