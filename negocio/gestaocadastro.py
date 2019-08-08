@@ -301,7 +301,7 @@ class GestaoCadastro(BaseObject):
                     # Define data inicial de pesquisa de dias úteis
                     dataInicial = indiceMensal['dt_referencia']
                     # Define data final de pesquisa de dias úteis
-                    dataFinal = dataInicial + relativedelta(day=31)
+                    dataFinal = dataInicial + relativedelta.relativedelta(day=31)
                     # Obtém a lista de dias úteis no mês
                     diasUteis = Calendario.listDiasUteis(dataInicial, dataFinal)
                     # Obtém a qtd de dias úteis no mês

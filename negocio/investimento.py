@@ -169,8 +169,6 @@ class Investimento(BaseObject):
 
         return resultadoInvestimento
 
-        datetime.to
-
     @classmethod
     def taxaAnualToMensal(cls, taxaAnual:Decimal):
         """Converte uma taxa anual em taxa mensal.
