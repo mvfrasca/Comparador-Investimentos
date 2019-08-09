@@ -15,4 +15,4 @@ indexes:
     direction: asc
     
   # Para implantar:
-  # gcloud datastore create-indexes index.yaml
+  # gcloud datastore indexes create index.yaml
