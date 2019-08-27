@@ -86,7 +86,7 @@ class Investimento(BaseObject):
             raise BusinessException('BE006', mensagem)
         # Validação - Taxa inválida
         elif self.taxa <= Decimal(0) and self.indexador.lower() != 'poupanca':
-            mensagem  = "Taxa do investimento não pode ser menor que 0 (zero)."
+            mensagem  = "Taxa do investimento não pode ser igual ou menor que 0 (zero)."
             raise BusinessException('BE007', mensagem)
 
         # Define a precisão para 9 casas decimais

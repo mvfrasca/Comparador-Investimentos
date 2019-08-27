@@ -1,5 +1,5 @@
 # Importanto módulo para tratamento de números decimais
-from decimal import Decimal, getcontext
+from decimal import Decimal, getcontext, ROUND_HALF_UP
 # Importa módulo para tratamento de data/hora
 from datetime import datetime
 # Importa módulo para operações com datas
@@ -180,9 +180,9 @@ class GestaoCadastro(BaseObject):
             tipoEntidade = get_model().TipoEntidade.INDICES
             contador = 0
             while(len(indices) > 0):
-                # Limita em 100 a quantidade de índices a consistir
-                if len(indices) >= 100:
-                    qtd = 100
+                # Limita em 200 a quantidade de índices a consistir
+                if len(indices) >= 200:
+                    qtd = 200
                 else:
                     qtd = len(indices)
                 indicesConsistir = indices[0:qtd]
@@ -242,12 +242,16 @@ class GestaoCadastro(BaseObject):
                 # if (periodicidade.lower() == 'mensal') and (datetime.strftime(dataAtual, "%Y%m") == datetime.strftime(dataUltReferencia, "%Y%m")):
                 #     # Pula para o próximo indexador
                 #     continue
+                # Recupera o índice diário referenciado em caso de índice Mensal
+                if (indexador.periodicidade.lower() == "mensal"):
+                    indexadorReferenciado = self.get_indexador(indexador.id_indexador_referenciado)
                 # Instancia a classe de negócios responsável pela consulta à API do Banco Central
                 objBC = BancoCentral()
                 # Recupera indices disponíveis do indexador desde a última atualização até hoje 
                 indicesBC = objBC.list_indices(indexador.serie, indexador.dt_ult_referencia, dataAtual)
                 # Inicializa coleção e contador de inserções/atualizações
                 indices = []
+                indicesDiarios = []
                 # Varre a lista de índices retornadas pela API
                 for indiceBC in indicesBC:
                     logger.info('Índice a ser atualizado Banco Central: {0}, qtd: {1}, dados: {2}'.format(indexador.nome, len(indiceBC), indiceBC))
@@ -263,11 +267,15 @@ class GestaoCadastro(BaseObject):
                     indice = Indice(tp_indice = indexador.id, dt_referencia = dataReferencia, val_indice = valorIndice, dth_inclusao = datetime.now())
                     # Inclui o índice na coleção de índices a ser consistida em banco de dados
                     indices.append(indice)
+                    if (indexador.periodicidade.lower() == "mensal"):
+                        # Calcula índices diários a partir do índice Mensal
+                        indicesDiarios+= self.calcular_indices_diarios(indexadorReferenciado, indice)
                 
-                # Inclui / Atualiza os índices em lote
+                # Inclui / Atualiza os índices mensais em lote
                 contador+= self.put_indices(indexador, indices)
-
-            # self.atualizar_indices_calculados()
+                if (indexador.periodicidade.lower() == "mensal"):
+                    # Inclui / Atualiza os índices diários em lote
+                    contador+= self.put_indices(indexadorReferenciado, indicesDiarios)
 
             return contador
 
@@ -276,56 +284,43 @@ class GestaoCadastro(BaseObject):
         except Exception as e:
             raise ServerException(e)
                 
-    def atualizar_indices_calculados(self):
+    def calcular_indices_diarios(self, indexadorDiario: Indexador, indiceMensal: Indice):
         """Atualiza os índices dos indexadores cujo tipo de atualização é calculada para periodicidade Diária 
         a partir dos índices de periodicidade Mensal. 
         """
         try:
-            # Define a data para referência da consulta (utiliza fromisoformat para buscar data com hora/minuto/segundo 
-            # zerados caso contrário datastore não reconhece)
-            dataAtual = datetime.fromisoformat(datetime.now().date().isoformat())
-            contador = 0
-            # Obtém a lista de indexadores com tipo e atualizaçaõ AUTOMÁTICA 
-            # cuja data de última atualização é anterior à data atual
-            indexadores = self.get_indexadores(dataAtual, TipoAtualizacao.CALCULADA)
+            # Define a precisão para 9 casas decimais
+            getcontext().prec = 9
+            getcontext().rounding = ROUND_HALF_UP
+            # Inicializa coleção e contador de inserções/atualizações
+            indices = []
+            # Define data inicial de pesquisa de dias úteis
+            dataInicial = indiceMensal.dt_referencia
+            # Define data final de pesquisa de dias úteis
+            dataFinal = dataInicial + relativedelta(day=31)
+            # Obtém a lista de dias úteis no mês
+            diasUteis = Calendario.listDiasUteis(dataInicial, dataFinal)
+            # Obtém a qtd de dias úteis no mês
+            qtdDiasUteis = Decimal(len(diasUteis))
 
-            # Percorre os indexadores para consulta e atualização
-            for indexador in indexadores:
-                # Loga os estado atual do indexador
-                logger.info('Indexador a receber atualização de índices CALCULADOS: {}'.format(indexador))
+            for dataReferencia in diasUteis:
+                # Obtém o valor do índice diário partindo do indice mensal com base na qtd de dias úteis
+                if indiceMensal.val_indice > 0:
+                    valorIndice = (Decimal(1)+Decimal(indiceMensal.val_indice))**(Decimal(1)/qtdDiasUteis)-1
+                else:
+                    valorIndice = -((Decimal(1)+Decimal(abs(indiceMensal.val_indice)))**(Decimal(1)/qtdDiasUteis)-1)
+                # logger.info('Índice Diário calculado: {0}, taxa Mensal: {1}, taxa Diária: {2}'.format(indexadorDiario.nome, indiceMensal.val_indice, valorIndice))
+                # Popula uma instancia de índice a ser consistida
+                indice = Indice(tp_indice = indexadorDiario.id, dt_referencia = dataReferencia, val_indice = float(valorIndice), dth_inclusao = datetime.now())
+                # Inclui o índice na coleção de índices a ser consistida em banco de dados
+                indices.append(indice)
+            
+            # Inclui / Atualiza os índices em lote
+            # self.put_indices(indexadorDiario, indices)
 
-                # Recupera indices disponíveis do indexador referenciado que possui os índices Mensais 
-                # desde a última atualização até hoje 
-                indicesMensais = self.list_indices(indexador.id_indexador_referenciado, indexador.dt_ult_referencia, dataAtual)
-                # Inicializa coleção e contador de inserções/atualizações
-                indices = []
-                # Varre a lista de índices retornadas pela API
-                for indiceMensal in indicesMensais:
-                    # Define data inicial de pesquisa de dias úteis
-                    dataInicial = indiceMensal['dt_referencia']
-                    # Define data final de pesquisa de dias úteis
-                    dataFinal = dataInicial + relativedelta(day=31)
-                    # Obtém a lista de dias úteis no mês
-                    diasUteis = Calendario.listDiasUteis(dataInicial, dataFinal)
-                    # Obtém a qtd de dias úteis no mês
-                    qtdDiasUteis = float(len(diasUteis))
-
-                    for dataReferencia in diasUteis:
-                        # Obtém o valor do índice diário partindo do indice mensal com base na qtd de dias úteis
-                        valorIndice = (1+float(indiceMensal['val_indice']))**(1/qtdDiasUteis)-1
-                                            
-                        logger.info('Índice Diário calculado: {0}, taxa Mensal: {1}, taxa Diária: {2}'.format(indexador.nome, indiceMensal['val_indice'], valorIndice))
-                        # Popula uma instancia de índice a ser consistida
-                        indice = Indice(tp_indice = indexador.id, dt_referencia = dataReferencia, val_indice = valorIndice, dth_inclusao = datetime.now())
-                        # Inclui o índice na coleção de índices a ser consistida em banco de dados
-                        indices.append(indice)
-                
-                # Inclui / Atualiza os índices em lote
-                contador+= self.put_indices(indexador, indices)
-
-            return contador
+            return indices
 
         except BusinessException as be:
             raise be
         except Exception as e:
-            raise ServerException(e)     
+            raise ServerException(e)
