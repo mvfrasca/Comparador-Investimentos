@@ -198,6 +198,7 @@ class GestaoCadastro(BaseObject):
                 indexador.dt_ult_referencia = ult_indice_removido.dt_referencia
                 indexador.dth_ult_atualiz = datetime.now()
                 indexador.qtd_regs_ult_atualiz = qtd
+                indexador.val_ultimo_indice = ult_indice_removido.val_indice
                 self.put_indexador(indexador)
             
             return contador
@@ -305,10 +306,7 @@ class GestaoCadastro(BaseObject):
 
             for dataReferencia in diasUteis:
                 # Obtém o valor do índice diário partindo do indice mensal com base na qtd de dias úteis
-                if indiceMensal.val_indice > 0:
-                    valorIndice = (Decimal(1)+Decimal(indiceMensal.val_indice))**(Decimal(1)/qtdDiasUteis)-1
-                else:
-                    valorIndice = -((Decimal(1)+Decimal(abs(indiceMensal.val_indice)))**(Decimal(1)/qtdDiasUteis)-1)
+                valorIndice = ((Decimal(1)+(Decimal(indiceMensal.val_indice) / Decimal(100)))**(Decimal(1)/qtdDiasUteis)-1) * Decimal(100)
                 # logger.info('Índice Diário calculado: {0}, taxa Mensal: {1}, taxa Diária: {2}'.format(indexadorDiario.nome, indiceMensal.val_indice, valorIndice))
                 # Popula uma instancia de índice a ser consistida
                 indice = Indice(tp_indice = indexadorDiario.id, dt_referencia = dataReferencia, val_indice = float(valorIndice), dth_inclusao = datetime.now())

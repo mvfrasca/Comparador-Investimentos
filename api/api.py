@@ -25,6 +25,7 @@ import logging
 # Importa as classes de negócio
 from negocio.investimento import Investimento
 from negocio.gestaocadastro import GestaoCadastro
+from negocio.calendario import Calendario
 
 # Inicializa o objeto para gravação de logs
 logger = logging.getLogger('Gerenciador API')
@@ -40,9 +41,14 @@ def calcular_investimento():
     
     Argumentos:
         tipoInvestimento: tipo de investimento (ex.: CDB, LCI, LCA, Poupanca)
+        tipoRendimento: 
+           pre: pré-fixado (7% a.a) - requer campo taxaPrefixada
+           pos: pós-fixado (120% do CDI) - requer campo taxa
+           hibrido: misto de pré-fixado e pós-fixado (ex.: IPCA + 7% a.a.) - requer campos taxa e taxaPrefixada
         valor: valor inicial do investimento
         indexador: nome identificador do indexador (ex.: ipca, selic)
-        taxa: percentual aplicado sobre o índice (ex.: 130 (130% do cdi), 7 (IPCA + 7%))
+        taxa: percentual aplicado sobre o índice (ex.: 130 (130% do cdi))
+        taxaPrefixada: percentual prefixado anual para investimentos prerfixados ou híbridos (ex.: Préfixado - 7% a.a ou Híbrido - 7% a.a. + IPCA (IPCA + 7%))
         dataInicial: data inicial do investimento
         dataFinal: data de vencimento do investimento
     Retorno:
@@ -69,6 +75,13 @@ def calcular_investimento():
     
     # TODO: Verificar se é um tipo de investimento válido
 
+    # Validação - tipoRendimento
+    if 'tipoRendimento' not in queryParameters:
+        mensagem  = "Você deve informar o tipo de rendimento (pré-fixado, pós-fixado ou híbrido)."
+        raise InputException('tipoRendimento', mensagem)
+    else:
+        tipoRendimento = queryParameters.get('tipoRendimento')
+
     # Validação - valor
     if 'valor' not in queryParameters:
         mensagem  = "Você deve informar o valor inicial do investimento."
@@ -79,7 +92,20 @@ def calcular_investimento():
     else:
         valInvestimentoInicial = Decimal(queryParameters.get('valor'))
     
+    taxaPrefixada = Decimal(0)
+    if tipoRendimento.lower() == 'pre' or tipoRendimento.lower() == 'hibrido':
+        # Validação - taxa
+        if 'taxaPrefixada' not in queryParameters:
+            mensagem  = "Você deve informar a taxa pré-fixada."
+            raise InputException('taxaPrefixada', mensagem)
+        elif _is_number(queryParameters.get('taxaPrefixada')) == False:
+            mensagem  = "Taxa pré-fixada é inválida. Utilizar ponto ao invés de virgula para casas decimais."
+            raise InputException('taxaPrefixada', mensagem)
+        else:
+            taxaPrefixada = Decimal(queryParameters.get('taxaPrefixada'))
+
     # Validação - indexador
+    indexador = None
     if 'indexador' not in queryParameters:
         mensagem  = "Você deve informar o indexador do investimento."
         raise InputException('indexador', mensagem)
@@ -88,6 +114,7 @@ def calcular_investimento():
     
     # TODO: Verificar se é um indexador válido
 
+    taxa = Decimal(100)
     # Validação - taxa
     if 'taxa' not in queryParameters:
         mensagem  = "Você deve informar a taxa relativa ao indexador do investimento."
@@ -97,6 +124,17 @@ def calcular_investimento():
         raise InputException('taxa', mensagem)
     else:
         taxa = Decimal(queryParameters.get('taxa'))
+
+    # taxaPrefixada = Decimal(100)
+    # # Validação - taxaPrefixada
+    # if 'taxaPrefixada' not in queryParameters:
+    #     mensagem  = "Você deve informar a taxa prefixada ."
+    #     raise InputException('taxa', mensagem)
+    # elif _is_number(queryParameters.get('taxa')) == False:
+    #     mensagem  = "Taxa relativa ao indexador do investimento é inválida. Utilizar ponto ao invés de virgula para casas decimais."
+    #     raise InputException('taxa', mensagem)
+    # else:
+    #     taxa = Decimal(queryParameters.get('taxa'))
 
     # Validação - dataInicial
     if 'dataInicial' not in queryParameters:
@@ -122,7 +160,7 @@ def calcular_investimento():
     
     try: 
         # Instancia a classe de negócio Investimento 
-        objInvest = Investimento(tipoInvestimento, valInvestimentoInicial, indexador, taxa, dataInicial, dataFinal)
+        objInvest = Investimento(tipoInvestimento=tipoInvestimento, tipoRendimento=tipoRendimento, valInvestimentoInicial=valInvestimentoInicial, indexador=indexador, taxa=taxa, taxaPrefixada=taxaPrefixada, dataInicial=dataInicial, dataFinal=dataFinal)
         # Realiza o cálculo de evolução do investimento
         resultadoInvestimento = objInvest.calcular_investimento()
     except BusinessException as be:
@@ -156,7 +194,7 @@ def post_indexadores():
     else:
         return _success({ 'mensagem': 'Indexadores incluidos/atualizados com sucesso!' }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
-@api.route('/feriados', methods=['POST'])
+@api.route('/calendario/feriados', methods=['POST'])
 def post_feriados():
     """Carga inicial das entidades que representarão os feriados.
     """
@@ -174,7 +212,7 @@ def post_feriados():
     else:
         return _success({ 'mensagem': '{} feriados incluidos/atualizados com sucesso!'.format(qtdFeriados) }, 201), 201, {'Access-Control-Allow-Origin': '*'} 
 
-@api.route('/feriados', methods=['GET'])
+@api.route('/calendario/feriados', methods=['GET'])
 def list_feriados():
     """ Retorna lista com os feriados referentes a um período
         
@@ -187,7 +225,7 @@ def list_feriados():
     # Obtém argumentos
     queryParameters = request.args
     # ------------------------------------------------------------------------------ #
-    # Resgata e valida os dados de entrada para cálculo da evolução do investimento
+    # Resgata e valida os dados de entrada
     # ------------------------------------------------------------------------------ #
     # Validação - dataInicial
     if 'dataInicial' not in queryParameters:
@@ -224,8 +262,62 @@ def list_feriados():
         resposta.update({'feriados': feriados})
         return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
 
-@api.route('/feriados', methods=['OPTIONS'])
+@api.route('/calendario/feriados', methods=['OPTIONS'])
 def feriados_options (self):
+    return {'Allow' : 'GET' }, [200,400,500], \
+    { 'Access-Control-Allow-Origin': '*', \
+    'Access-Control-Allow-Methods' : 'GET' }
+
+@api.route('/calendario/dias-uteis', methods=['GET'])
+def list_dias_uteis():
+    """ Retorna lista com os dias úteis referentes a um período
+        
+    Argumentos:
+        dataInicial: data inicial do período para consulta de dias úteis
+        dataFinal: data de vencimento do período para consulta de dias úteis
+    Retorno:
+            Retorna uma lista contendo os dias úteis do período informado
+    """
+    # Obtém argumentos
+    queryParameters = request.args
+    # ------------------------------------------------------------------------------ #
+    # Resgata e valida os dados de entrada
+    # ------------------------------------------------------------------------------ #
+    # Validação - dataInicial
+    if 'dataInicial' not in queryParameters:
+        mensagem  = "Você deve informar a data inicial do período para consulta de dias úteis. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataInicial', mensagem)
+    elif _is_date(queryParameters.get('dataInicial'), "%Y-%m-%d") == False:
+        mensagem  = "Data inicial do período para consulta de dias úteis inválida. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataInicial', mensagem)
+    else:
+        dataInicial = datetime.strptime(queryParameters.get('dataInicial'), "%Y-%m-%d").date()
+
+    # Validação - dataFinal
+    if 'dataFinal' not in queryParameters:
+        mensagem  = "Você deve informar a data final do período para consulta de dias úteis. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataFinal', mensagem)
+    elif _is_date(queryParameters.get('dataFinal'), '%Y-%m-%d') == False:
+        mensagem  = "Data final do período para consulta de dias úteis inválida. Formato esperado: AAAA-MM-DD"
+        raise InputException('dataFinal', mensagem)
+    else:
+        dataFinal = datetime.strptime(queryParameters.get('dataFinal'), "%Y-%m-%d").date()
+    
+    try:
+        # Obtém a lista de dias úteis no mês
+        diasUteis = Calendario.listDiasUteis(dataInicial, dataFinal)
+        
+    except BusinessException as be:
+        raise be
+    except Exception as e:
+        raise ServerException(e)
+    else:
+        resposta = {'mensagem': 'Consulta aos dias úteis realizada com sucesso'}
+        resposta.update({'diasUteis': diasUteis})
+        return _success(resposta, 200), 200, {'Access-Control-Allow-Origin': '*'} 
+
+@api.route('/calendario/dias-uteis', methods=['OPTIONS'])
+def dias_uteis_options (self):
     return {'Allow' : 'GET' }, [200,400,500], \
     { 'Access-Control-Allow-Origin': '*', \
     'Access-Control-Allow-Methods' : 'GET' }

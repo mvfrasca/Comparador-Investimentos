@@ -26,7 +26,7 @@ class Indexador(BaseObject):
         dth_ult_atualiz: data/hora da da última atualização de índices na base de dados de índices (formato datetime)
     """
     # Método criador
-    def __init__(self, id: str, nome: str, dt_ult_referencia: datetime.date, periodicidade: str, tipo_atualizacao: str, id_indexador_referenciado: str, serie: str, qtd_regs_ult_atualiz: int, dth_ult_atualiz: datetime):
+    def __init__(self, id: str, nome: str, dt_ult_referencia: datetime.date, periodicidade: str, tipo_atualizacao: str, id_indexador_referenciado: str, serie: str, qtd_regs_ult_atualiz: int, dth_ult_atualiz: datetime, val_ultimo_indice: float = None):
         # Atualiza os atributos com os valores informados na instanciação da classe
         self.id = id.lower()
         self.nome = nome
@@ -37,6 +37,7 @@ class Indexador(BaseObject):
         self.serie = serie
         self.qtd_regs_ult_atualiz = qtd_regs_ult_atualiz
         self.dth_ult_atualiz = dth_ult_atualiz
+        self.val_ultimo_indice = val_ultimo_indice
 
 # Enum de tipos de indexadores - para evitar buscas excessivas no banco dado que não não mudam tanto
 class TipoIndexador(Enum):

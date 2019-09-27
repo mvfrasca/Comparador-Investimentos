@@ -10,6 +10,7 @@ from enum import Enum
 from negocio.baseobject import BaseObject
 from negocio.gestaocadastro import GestaoCadastro
 from negocio.indexador import TipoIndexador
+from negocio.calendario import Calendario
 # Import o módulo para cálculos matemáticos
 import math
 # Importa o módulo Helper
@@ -28,14 +29,16 @@ class Investimento(BaseObject):
         dataFinal (datetime): data de vencimento do investimento
     """
     # Método criador 
-    def __init__(self, tipoInvestimento: str, valInvestimentoInicial: Decimal, indexador: str, taxa: Decimal, dataInicial: datetime, dataFinal: datetime):
+    def __init__(self, tipoInvestimento: str, tipoRendimento: str, valInvestimentoInicial: Decimal, indexador: str, taxa: Decimal, taxaPrefixada: Decimal, dataInicial: datetime, dataFinal: datetime):
         # Define a precisão para 9 casas decimais
         getcontext().prec = 9
         # Atualiza os atributos com os valores informados na instanciação da classe
         self.tipoInvestimento = tipoInvestimento
+        self.tipoRendimento = tipoRendimento
         self.valInvestimentoInicial = Decimal(valInvestimentoInicial)
         self.indexador = indexador
         self.taxa = Decimal(taxa)
+        self.taxaPrefixada = Decimal(taxaPrefixada)
         self.dataInicial = dataInicial
         self.dataFinal = dataFinal
         # Inicializa demais atributos da classe
@@ -80,15 +83,24 @@ class Investimento(BaseObject):
         elif self.tipoInvestimento.lower() not in TipoInvestimento.values():
             mensagem  = "Tipo de investimento inválido [{0}]. Tipos esperado: {1}.".format(self.tipoInvestimento.lower(), TipoInvestimento.values())
             raise BusinessException('BE005', mensagem)
+        elif self.tipoRendimento.lower() == 'pre':
+            if self.taxaPrefixada <= Decimal(0):
+                mensagem  = "Você deve informar a taxa prefixada."
+                raise BusinessException('BE006', mensagem)
+        elif self.tipoRendimento.lower() == 'pos':
+            if self.taxa <= Decimal(0):
+                mensagem  = "Você deve informar a taxa prefixada."
+                raise BusinessException('BE006', mensagem)
         # Validação - Tipo de indexador inválido
         elif self.indexador.lower() not in TipoIndexador.values():
             mensagem  = "Tipo de indexador inválido [{0}]. Tipos esperado: {}.".format(self.indexador.lower(), TipoIndexador.values())
             raise BusinessException('BE006', mensagem)
         # Validação - Taxa inválida
-        elif self.taxa <= Decimal(0) and self.indexador.lower() != 'poupanca':
+        elif self.indexador.lower() != 'poupanca' and self.taxa <= Decimal(0) or self.taxaPrefixada <= Decimal(0):
             mensagem  = "Taxa do investimento não pode ser igual ou menor que 0 (zero)."
             raise BusinessException('BE007', mensagem)
 
+        
         # Define a precisão para 9 casas decimais
         getcontext().prec = 9
         getcontext().rounding = ROUND_HALF_UP
@@ -98,7 +110,7 @@ class Investimento(BaseObject):
 
         objCadastro = GestaoCadastro()
         # Executa a consulta e armazena num dictionary 
-        indices = objCadastro.list_indices(self.indexador.lower(), self.dataInicial - timedelta(days=1), self.dataFinal)
+        indices = objCadastro.list_indices(self.indexador.lower(), self.dataInicial, self.dataFinal)
         
         # Calcula a quantidade de dias corridos do investimento
         self.qtdDiasCorridos = (self.dataFinal - self.dataInicial).days
@@ -107,30 +119,48 @@ class Investimento(BaseObject):
         # com a peridicidade do índice (diariamente ou mensalmente)
         resultadoInvestimento = {}
         i = 0
-        # Varre a lista de índices para aplicar os índices de acordo com a peridicidade do 
-        # índice (diariamente ou mensalmente)
+        # Se taxa prefixada foi informada recupera a taxa diária correspondente
+        taxaPrefixadaDiaria = 0
+        if self.taxaPrefixada > Decimal(0):
+            taxaPrefixadaDiaria = self.taxaAnualToDiaria(self.taxaPrefixada)
+  
+        dtReferencia = self.dataInicial
+        # Varre a lista de índices para calcular a evolução
         for indice in indices:
             # Formata a data de referência
-            data = indice['dt_referencia']
+            dtReferencia = indice['dt_referencia']
             # Formata o valor do índice
             valIndice = indice['val_indice']
             valIndice = Decimal(valIndice)
-            # De acordo com o indexador carrega o valor do índice com a taxa informada
-            if self.indexador.lower() in ['ipca', 'igpm']:
-                # Ex.: IPCA + 7%
-                taxaMensal = self.taxaAnualToMensal(self.taxa)
-                valIndice = valIndice + taxaMensal
-            elif self.indexador.lower() in ['cdi', 'selic']:
-                # Ex.: 130% do CDI
+            # Se taxa em relação ao índice foi informada aplica sobre o índice obtido
+            if self.taxa > Decimal(0):
                 valIndice = valIndice * (self.taxa / Decimal(100))
+            # Majora a taxa do índice com o valor prefixado
+            valIndice = valIndice + taxaPrefixadaDiaria
+                
             # Atualizado Saldo Bruto do investimento
             self.valSaldoBruto = self.valSaldoBruto * (1 + (valIndice / Decimal(100)))
             self.valSaldoBruto = Decimal(round(float(self.valSaldoBruto),2))
+            self.evolucao.append({'dtReferencia': dtReferencia, 'valIndice': float(valIndice), 'valSaldoBruto': float(self.valSaldoBruto)})
 
-            self.evolucao.append({'data': data, 'indice': float(valIndice), 'valor': float(self.valSaldoBruto)})
-            i = i + 1
-            #print("Mês/Ano: {0}  |  Indice: {1:03.7}  |  Valor: {2:03.2f}".format(ano_mes, val_indice, val_investimento_atualizado))
-        
+        if len(indices) > 0:
+            dtReferencia = dtReferencia + timedelta(days=1)
+
+        if dtReferencia < self.dataFinal:
+            # Recupera os dados do indexador
+            objIndexador = objCadastro.get_indexador(self.indexador.lower())
+            valIndice = objIndexador.val_ultimo_indice
+             # Se taxa em relação ao índice foi informada aplica sobre o índice obtido
+            if self.taxa > Decimal(0):
+                valIndice = valIndice * (self.taxa / Decimal(100))
+            # Majora a taxa do índice com o valor prefixado
+            valIndice = valIndice + taxaPrefixadaDiaria
+            for dtUtil in Calendario.listDiasUteis(dtReferencia, self.dataFinal):
+                # Atualizado Saldo Bruto do investimento
+                self.valSaldoBruto = self.valSaldoBruto * (1 + (valIndice / Decimal(100)))
+                self.valSaldoBruto = Decimal(round(float(self.valSaldoBruto),2))
+                self.evolucao.append({'dtReferencia': dtUtil, 'valIndice': float(valIndice), 'valSaldoBruto': float(self.valSaldoBruto)})
+
         ### Atualiza resultados do investimento ###
         # Rentabilidade bruta
         self.rentabilidadeBruta = self.valSaldoBruto - self.valInvestimentoInicial
@@ -200,6 +230,23 @@ class Investimento(BaseObject):
         taxaDiaria = Decimal(0)
         tempTaxaMensal = Decimal(1) + taxaMensal 
         taxaDiaria = Decimal(math.pow(tempTaxaMensal, (Decimal(1 / diasUteisMes))) - 1)
+        taxaDiaria = taxaDiaria * Decimal(100)
+
+        return taxaDiaria
+    
+    @classmethod
+    def taxaAnualToDiaria(cls, taxaAnual:Decimal):
+        """Converte uma taxa anual em taxa diária.
+
+        Argumentos: 
+            taxaAnual: taxa Anual a ser convertida
+        Retorno:
+            Retorna um decimal representando a taxa diária calculada.
+        """
+        taxaAnual = taxaAnual / Decimal(100) 
+        taxaDiaria = Decimal(0)
+        tempTaxaAnual = Decimal(1) + taxaAnual 
+        taxaDiaria = Decimal(math.pow(tempTaxaAnual, (Decimal(1 / 252))) - 1)
         taxaDiaria = taxaDiaria * Decimal(100)
 
         return taxaDiaria
