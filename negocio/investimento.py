@@ -178,10 +178,10 @@ class Investimento(BaseObject):
         ### Atualiza resultados do investimento ###
         # Rentabilidade bruta
         self.rentabilidadeBruta = self.valSaldoBruto - self.valInvestimentoInicial
-        self.percRentabilidadeBruta = ((self.valSaldoBruto / self.valInvestimentoInicial)-1) * Decimal(100)
-        self.percRentabilidadeBrutaDiaria = self.taxaPeriodo(self.percRentabilidadeBruta, self.qtdDiasUteis)
-        self.percRentabilidadeBrutaMensal = self.taxaJuros(self.percRentabilidadeBrutaDiaria, 21)
-        self.percRentabilidadeBrutaAnual = self.taxaJuros(self.percRentabilidadeBrutaDiaria, 252)
+        self.percRentabilidadeBruta = Decimal(round(((self.valSaldoBruto / self.valInvestimentoInicial)-1) * Decimal(100), 3))
+        self.percRentabilidadeBrutaDiaria = Decimal(round(self.taxaPeriodo(self.percRentabilidadeBruta, self.qtdDiasUteis), 6))
+        self.percRentabilidadeBrutaMensal = Decimal(round(self.taxaJuros(self.percRentabilidadeBrutaDiaria, 21), 3))
+        self.percRentabilidadeBrutaAnual = Decimal(round(self.taxaJuros(self.percRentabilidadeBrutaDiaria, 252), 3))
         # Imposto de renda
         if self.tipoInvestimento.lower() in ['poupanca', 'lci', 'lca']:
             self.percImpostoRenda = Decimal(0)
@@ -195,10 +195,10 @@ class Investimento(BaseObject):
         # Saldo Líquido
         self.valSaldoLiquido = self.valInvestimentoInicial + self.rentabilidadeLiquida
         # % Rentabilidade
-        self.percRentabilidadeLiquida = ((self.valSaldoLiquido / self.valInvestimentoInicial)-1) * Decimal(100)
-        self.percRentabilidadeLiquidaDiaria = self.taxaPeriodo(self.percRentabilidadeLiquida, self.qtdDiasUteis)
-        self.percRentabilidadeLiquidaMensal = self.taxaJuros(self.percRentabilidadeLiquidaDiaria, 21)
-        self.percRentabilidadeLiquidaAnual = self.taxaJuros(self.percRentabilidadeLiquidaDiaria, 252)
+        self.percRentabilidadeLiquida = Decimal(round(((self.valSaldoLiquido / self.valInvestimentoInicial)-1) * Decimal(100), 3))
+        self.percRentabilidadeLiquidaDiaria = Decimal(round(self.taxaPeriodo(self.percRentabilidadeLiquida, self.qtdDiasUteis), 6))
+        self.percRentabilidadeLiquidaMensal = Decimal(round(self.taxaJuros(self.percRentabilidadeLiquidaDiaria, 21), 3))
+        self.percRentabilidadeLiquidaAnual = Decimal(round(self.taxaJuros(self.percRentabilidadeLiquidaDiaria, 252), 3))
 
         # for index, item in enumerate(times_ordenados, start=1):
         #     item['class_gols_pro_mand'] = index 
