@@ -40,7 +40,7 @@ class Calendario(BaseObject):
             raise ValueError("Data final do período deve ser maior ou igual à data inicial.")
         
         # Obtém a lista de feriados do período solicitado
-        feriados = list(map(Feriado.fromDict, get_model().list_feriados(dataInicial, dataFinal)))
+        feriados = list(map(lambda e: e["dt_feriado"], get_model().list_feriados(dataInicial, dataFinal)))
         # Define a variável que armazenará a lista de dias úteis do período solicitado
         diasUteis = []
 
@@ -48,7 +48,7 @@ class Calendario(BaseObject):
             data = dataInicial
             while data <= dataFinal:
                 # Se dia da semana for sábado (5) ou domingo (6)
-                if data.weekday() not in (5,6) and data not in feriados:
+                if (data.weekday() not in (5,6)) and (data not in feriados):
                     diasUteis.append(data)
                 # Acrescenta 1 dia
                 data+= timedelta(days=1)

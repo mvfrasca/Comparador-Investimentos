@@ -106,24 +106,26 @@ def calcular_investimento():
 
     # Validação - indexador
     indexador = None
-    if 'indexador' not in queryParameters:
-        mensagem  = "Você deve informar o indexador do investimento."
-        raise InputException('indexador', mensagem)
-    else:
-        indexador = queryParameters.get('indexador')
+    if tipoRendimento.lower() != 'pre':
+        if 'indexador' not in queryParameters:
+            mensagem  = "Você deve informar o indexador do investimento."
+            raise InputException('indexador', mensagem)
+        else:
+            indexador = queryParameters.get('indexador')
     
     # TODO: Verificar se é um indexador válido
 
-    taxa = Decimal(100)
     # Validação - taxa
-    if 'taxa' not in queryParameters:
-        mensagem  = "Você deve informar a taxa relativa ao indexador do investimento."
-        raise InputException('taxa', mensagem)
-    elif _is_number(queryParameters.get('taxa')) == False:
-        mensagem  = "Taxa relativa ao indexador do investimento é inválida. Utilizar ponto ao invés de virgula para casas decimais."
-        raise InputException('taxa', mensagem)
-    else:
-        taxa = Decimal(queryParameters.get('taxa'))
+    taxa = Decimal(100)
+    if tipoRendimento.lower() != 'pre':
+        if 'taxa' not in queryParameters:
+            mensagem  = "Você deve informar a taxa relativa ao indexador do investimento."
+            raise InputException('taxa', mensagem)
+        elif _is_number(queryParameters.get('taxa')) == False:
+            mensagem  = "Taxa relativa ao indexador do investimento é inválida. Utilizar ponto ao invés de virgula para casas decimais."
+            raise InputException('taxa', mensagem)
+        else:
+            taxa = Decimal(queryParameters.get('taxa'))
 
     # taxaPrefixada = Decimal(100)
     # # Validação - taxaPrefixada
