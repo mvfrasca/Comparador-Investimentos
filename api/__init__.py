@@ -63,7 +63,7 @@ def create_app(config, debug=False, testing=False, config_overrides=None):
         logger.error(traceback.format_exc(limit=5))
         mensagem = "O recurso requisitado não foi encontrado."
         resposta = {'ServerException': {'mensagem': mensagem}}
-        return _error(resposta, 404), 404
+        return _error(resposta, 404), 404, {'Access-Control-Allow-Origin': '*'} 
 
     # Tratamento de erros para erro interno do servidor
     @app.errorhandler(500)
@@ -71,27 +71,27 @@ def create_app(config, debug=False, testing=False, config_overrides=None):
         logger.error(traceback.format_exc(limit=5))
         mensagem = "Ocorreu um erro inesperado no servidor. Por favor tente novamente mais tarde."
         resposta = {'ServerException': {'mensagem': mensagem}}
-        return _error(resposta, 500), 500
+        return _error(resposta, 500), 500, {'Access-Control-Allow-Origin': '*'} 
     
     # Tratamento de erros para erros internos tratados 
     @app.errorhandler(ServerException)
     def server_exception(e):
         logger.error(traceback.format_exc(limit=5))   
         resposta = {'ServerException': {'mensagem': e.mensagem}}
-        return _error(resposta, 500), 500
+        return _error(resposta, 500), 500, {'Access-Control-Allow-Origin': '*'} 
 
     # Tratamento de erros gerados por dados de entrada incorretos ou incompletos  
     @app.errorhandler(InputException)
     def input_exception(e):
         logger.error(traceback.format_exc(limit=5))
         resposta = {'InputException': {'atributo': e.atributo, 'mensagem': e.mensagem}}
-        return _error(resposta, 400), 400
+        return _error(resposta, 400), 400, {'Access-Control-Allow-Origin': '*'} 
 
     # Tratamento de erros gerados por dados de entrada incorretos ou incompletos  
     @app.errorhandler(BusinessException)
     def business_exception(e):
         logger.error(traceback.format_exc(limit=5))
         resposta = {'BusinessException': {'codigo': e.codigo, 'mensagem': e.mensagem}}
-        return _error(resposta, 400), 400
+        return _error(resposta, 400), 400, {'Access-Control-Allow-Origin': '*'} 
 
     return app
